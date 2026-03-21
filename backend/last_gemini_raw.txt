@@ -1,0 +1,17 @@
+[
+  {
+    "text": "Sounds good! Looking forward to it.",
+    "tone": "casual",
+    "label": "Friendly"
+  },
+  {
+    "text": "Acknowledged. I will plan accordingly for Monday.",
+    "tone": "professional",
+    "label": "Polite"
+  },
+  {
+    "text": "Okay, noted.",
+    "tone": "brief",
+    "label": "Short"
+  }
+]

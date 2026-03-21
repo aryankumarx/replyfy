@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+build/
+dist/
+*.tgz
+
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+local.properties
+.gradle/
+/captures
+.externalNativeBuild
+.cxx
+
+# iOS
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.pbxuser
+*.xcworkspace/xcuserdata
+DerivedData/
+*.hmap
+*.ipa
+
+# React Native
+.expo/
+.expo-shared/
+buck-out/
+.buckconfig.local
+*.jsbundle
+
+# Testing
+coverage/
+.nyc_output
+
+# Misc
+*.pem
+.cache
