@@ -454,7 +454,10 @@
     try {
       const res = await fetch(`${API_URL}/api/suggest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': 'my-super-secret-key-12345'
+        },
         body: JSON.stringify({
           message,
           userId: 'web-demo',

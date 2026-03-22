@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
 const geminiService = require('../services/gemini.service');
 
 const router = express.Router();
@@ -46,10 +47,49 @@ function incrementUsage(userId) {
 }
 
 /**
+ * Middleware: Verify API Key
+ * Ensures only our authorized apps (React Native, Web Demo) can use the backend
+ */
+function verifyApiKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+  const expectedKey = process.env.APP_API_KEY;
+
+  if (!expectedKey) {
+    // If no key is set in .env, just allow it (development mode fallback)
+    return next();
+  }
+
+  if (!apiKey || apiKey !== expectedKey) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing x-api-key header' });
+  }
+
+  next();
+}
+
+/**
  * POST /api/suggest
  * Generate AI response suggestions
  */
-router.post('/', suggestLimiter, async (req, res) => {
+const suggestValidation = [
+  body('message')
+    .exists().withMessage('Message is required')
+    .isString().withMessage('Message must be a string')
+    .trim()
+    .notEmpty().withMessage('Message cannot be empty')
+    .isLength({ max: 1000 }).withMessage('Message too long (max 1000 characters)')
+    .escape(), // Sanitizes HTML tags to prevent XSS
+  body('userId').optional().isString().trim(),
+  body('userTier').optional().isString().trim(),
+  body('contextMessages').optional().isArray()
+];
+
+router.post('/', verifyApiKey, suggestLimiter, suggestValidation, async (req, res) => {
+  // Check validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: 'Validation failed', details: errors.array() });
+  }
+
   try {
     const { 
       message, 
@@ -57,19 +97,6 @@ router.post('/', suggestLimiter, async (req, res) => {
       userId = 'anonymous',
       userTier = 'free'
     } = req.body;
-
-    // Validation
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ 
-        error: 'Message is required and must be a string' 
-      });
-    }
-
-    if (message.length > 1000) {
-      return res.status(400).json({ 
-        error: 'Message too long (max 1000 characters)' 
-      });
-    }
 
     // Check daily limit
     const usageCheck = checkDailyLimit(userId, userTier);
