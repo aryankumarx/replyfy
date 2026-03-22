@@ -116,10 +116,12 @@ curl -s -X POST http://localhost:3000/api/suggest/test ^
 }
 ```
 
-## 🛡️ Rate Limit Protection
+## 🛡️ Security & Protections
 
 | Protection | Details |
 |-----------|---------|
+| **API Key Auth (`x-api-key`)** | Backend rejects unauthorized/public requests without a secret key |
+| **Input Sanitization (XSS)** | `express-validator` strictly escapes inputs & blocks payloads >1000 chars |
 | **Response Cache** | Same message = instant response from cache (5 min TTL) |
 | **Retry + Backoff** | Auto-retries on 429 errors (2s → 4s → 8s) |
 | **Frontend Cooldown** | 3-second gap enforced between requests |
