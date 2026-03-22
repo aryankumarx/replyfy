@@ -68,9 +68,15 @@ coverage/
 *.pem
 .cache
 
-# ===== Only upload backend for now =====
-frontend/
+# ===== Project structure =====
 docs/
+
+# Old React Native template files (not built by us)
+frontend/src/
+frontend/App.js
+frontend/package.json
+frontend/package-lock.json
+frontend/node_modules/
 
 # Template guide files (not part of the project)
 FREE_SETUP_GUIDE.md

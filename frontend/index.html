@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Keyboard Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+      z-index: 0;
+      animation: bgShift 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgShift {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      width: 100%;
+      padding: 24px 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeInDown 0.6s ease;
+    }
+
+    .header .logo {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6366f1, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 12px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      color: #10b981;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* Card */
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      margin-bottom: 20px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6366f1;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    /* Textarea */
+    .input-wrapper {
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: vertical;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    textarea::placeholder {
+      color: #555;
+    }
+
+    .char-count {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 11px;
+      color: #555;
+    }
+
+    /* Button */
+    .btn-generate {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-generate:active {
+      transform: translateY(0);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-generate .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Suggestions */
+    .suggestions-container {
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .suggestion-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .suggestion-card:hover {
+      background: rgba(99, 102, 241, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateX(4px);
+    }
+
+    .suggestion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tone-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tone-casual {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .tone-professional {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+
+    .tone-brief {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.25);
+    }
+
+    .tone-quick {
+      background: rgba(244, 114, 182, 0.15);
+      color: #f472b6;
+      border: 1px solid rgba(244, 114, 182, 0.25);
+    }
+
+    .copy-hint {
+      font-size: 11px;
+      color: #555;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .suggestion-card:hover .copy-hint {
+      opacity: 1;
+    }
+
+    .suggestion-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #d0d0d0;
+    }
+
+    /* Copied toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #10b981;
+      color: white;
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Error */
+    .error-msg {
+      text-align: center;
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 12px;
+      padding: 10px;
+      background: rgba(248, 113, 113, 0.08);
+      border-radius: 8px;
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .status-dot.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+    .status-dot.offline { background: #f87171; }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #444;
+    }
+
+    .footer a {
+      color: #6366f1;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">⌨️</div>
+    <h1>AI Keyboard Assistant</h1>
+    <p>Paste a message, get smart replies instantly</p>
+    <span class="badge">✦ POWERED BY GEMINI 2.5 FLASH-LITE</span>
+  </div>
+
+  <!-- Input Card -->
+  <div class="card">
+    <div class="card-label">📩 Incoming Message</div>
+    <div class="input-wrapper">
+      <textarea id="messageInput" placeholder="Paste the message you received here...&#10;&#10;Example: Hey! Are you free for dinner tomorrow?" maxlength="1000"></textarea>
+      <span class="char-count" id="charCount">0 / 1000</span>
+    </div>
+    <button class="btn-generate" id="generateBtn" onclick="generateSuggestions()">
+      ⚡ Generate Smart Replies
+    </button>
+    <div id="errorMsg"></div>
+  </div>
+
+  <!-- Suggestions -->
+  <div id="suggestionsContainer"></div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <span><span class="status-dot" id="statusDot"></span> <span id="statusText">Checking API...</span></span>
+    <span id="modelInfo">Model: gemini-2.5-flash-lite</span>
+  </div>
+
+  <div class="footer">
+    Built by <a href="https://github.com/aryankumarx" target="_blank">Aryan Kumar</a> · 
+    <a href="https://github.com/aryankumarx/ai-keyboard-assistant" target="_blank">GitHub</a>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+  const API_URL = 'http://localhost:3000';
+
+  // Character count
+  const textarea = document.getElementById('messageInput');
+  const charCount = document.getElementById('charCount');
+  textarea.addEventListener('input', () => {
+    charCount.textContent = `${textarea.value.length} / 1000`;
+  });
+
+  // Health check
+  async function checkHealth() {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (res.ok) {
+        dot.className = 'status-dot online';
+        text.textContent = 'API Online';
+      } else throw new Error();
+    } catch {
+      dot.className = 'status-dot offline';
+      text.textContent = 'API Offline — run npm run dev';
+    }
+  }
+  checkHealth();
+
+  // Cooldown to prevent rapid API calls
+  let lastRequestTime = 0;
+  const COOLDOWN_MS = 3000; // 3 second cooldown between requests
+
+  async function generateSuggestions() {
+    const message = textarea.value.trim();
+    const btn = document.getElementById('generateBtn');
+    const errorDiv = document.getElementById('errorMsg');
+    const container = document.getElementById('suggestionsContainer');
+
+    if (!message) {
+      errorDiv.innerHTML = '<div class="error-msg">Please paste a message first!</div>';
+      return;
+    }
+
+    // Cooldown check — prevent spamming the API
+    const timeSinceLast = Date.now() - lastRequestTime;
+    if (timeSinceLast < COOLDOWN_MS) {
+      const waitSec = ((COOLDOWN_MS - timeSinceLast) / 1000).toFixed(0);
+      errorDiv.innerHTML = `<div class="error-msg">⏳ Please wait ${waitSec}s before sending another request</div>`;
+      return;
+    }
+
+    // Loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Generating...';
+    errorDiv.innerHTML = '';
+    container.innerHTML = '';
+    lastRequestTime = Date.now();
+
+    try {
+      const res = await fetch(`${API_URL}/api/suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          userId: 'web-demo',
+          userTier: 'free'
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Request failed');
+      }
+
+      renderSuggestions(data.suggestions, data.usage);
+
+    } catch (err) {
+      errorDiv.innerHTML = `<div class="error-msg">❌ ${err.message}</div>`;
+    } finally {
+      // Keep button disabled during cooldown
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '⚡ Generate Smart Replies';
+      }, Math.max(0, COOLDOWN_MS - (Date.now() - lastRequestTime)));
+    }
+  }
+
+  // Render suggestion cards
+  function renderSuggestions(suggestions, usage) {
+    const container = document.getElementById('suggestionsContainer');
+
+    const toneIcons = { casual: '😊', professional: '💼', brief: '⚡', quick: '💬' };
+
+    let html = '<div class="card"><div class="card-label">💬 Smart Replies</div>';
+
+    suggestions.forEach((s, i) => {
+      const toneClass = `tone-${s.tone}`;
+      html += `
+        <div class="suggestion-card" onclick="copyText('${s.text.replace(/'/g, "\\'")}')">
+          <div class="suggestion-header">
+            <span class="tone-badge ${toneClass}">${toneIcons[s.tone] || '💬'} ${s.label || s.tone}</span>
+            <span class="copy-hint">Click to copy</span>
+          </div>
+          <div class="suggestion-text">${s.text}</div>
+        </div>
+      `;
+    });
+
+    if (usage) {
+      html += `<div style="text-align:center;font-size:12px;color:#555;margin-top:8px;">
+        Today: ${usage.used}/${usage.limit} suggestions used · ${usage.remaining} remaining
+      </div>`;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // Copy to clipboard
+  function copyText(text) {
+    navigator.clipboard.writeText(text);
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // Enter key shortcut
+  textarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      generateSuggestions();
+    }
+  });
+</script>
+
+</body>
+</html>

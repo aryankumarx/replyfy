@@ -1,32 +1,51 @@
-# 🤖 AI Keyboard Assistant — Backend API
+# 🤖 AI Keyboard Assistant
 
-A Node.js/Express backend that generates smart reply suggestions using **Google Gemini AI**. This is the server-side engine for a planned React Native mobile app.
+A smart AI-powered reply suggestion tool that generates contextual responses for any incoming message. Built with **Node.js/Express** backend and a **web demo UI**, powered by **Google Gemini AI** (completely free).
 
 ## 🌟 Features
 
-- ✅ **AI-Powered Reply Suggestions** — Generates 3 contextual reply options for any incoming message
-- ✅ **Multi-Tone Responses** — Casual, Professional, and Brief suggestions
-- ✅ **Multi-Language** — English, Hindi, and Hinglish support
-- ✅ **Free AI** — Uses Google Gemini 2.5 Flash (completely free, no credit card needed)
-- ✅ **Rate Limiting & Security** — Helmet, CORS, and per-user daily usage limits
-- ✅ **Privacy First** — Zero message storage, messages are only passed to AI in real-time
+- ✅ **4 Smart Reply Tones** — Casual, Professional, Brief, and Quick (1-3 word) replies
+- ✅ **Multi-Language Detection** — Automatically detects English, Hindi, and Hinglish (Roman Hindi) and replies in the same language
+- ✅ **Human-like Responses** — No robotic replies, writes like a real person texting
+- ✅ **Web Demo UI** — Beautiful dark-themed interface to test the API live
+- ✅ **Free AI** — Uses Google Gemini 2.5 Flash-Lite (free tier, no credit card)
+- ✅ **Smart Rate Limiting** — Response caching, retry with backoff, cooldown protection
+- ✅ **Privacy First** — Zero message storage, processed in real-time only
+
+## 🖥️ Web Demo
+
+The project includes a sleek web demo at `http://localhost:3000` — just paste a message and get instant reply suggestions.
+
+```
+┌──────────────────────────────────────┐
+│  ⌨️  AI Keyboard Assistant           │
+│                                      │
+│  📩 Incoming Message                 │
+│  ┌────────────────────────────────┐  │
+│  │ kal milte hai bhai             │  │
+│  └────────────────────────────────┘  │
+│  [⚡ Generate Smart Replies]         │
+│                                      │
+│  😊 Haan bhai pakka! Kal milte hain  │
+│  💼 Zarur milenge kal. Time bata do  │
+│  ⚡ Done kal milte hai               │
+│  💬 Pakka!                           │
+└──────────────────────────────────────┘
+```
 
 ## 🏗️ Architecture
 
 ```
-Client (curl / Mobile App / Frontend)
-          │ HTTPS
-          ▼
-┌─────────────────────┐
-│  Express.js API     │
-│  (Node.js Backend)  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  Google Gemini API   │
-│  (gemini-2.5-flash)  │
-└─────────────────────┘
+Browser (Web Demo)
+       │
+       ▼
+┌───────────────────────┐      ┌────────────────────┐
+│  Express.js Backend   │ ──►  │  Google Gemini AI   │
+│  • API routes         │      │  (2.5-flash-lite)   │
+│  • Rate limiting      │ ◄──  │  FREE tier          │
+│  • Response cache     │      └────────────────────┘
+│  • Language detection │
+└───────────────────────┘
 ```
 
 ## 🛠️ Tech Stack
@@ -34,11 +53,10 @@ Client (curl / Mobile App / Frontend)
 | Technology | Purpose |
 |-----------|---------|
 | Node.js & Express.js | REST API server |
-| Google Gemini 2.5 Flash | AI response generation (FREE) |
-| Helmet.js | Security headers |
+| Google Gemini 2.5 Flash-Lite | AI response generation (FREE) |
+| Vanilla HTML/CSS/JS | Web demo frontend |
+| Helmet.js + CORS | Security |
 | express-rate-limit | Rate limiting |
-| dotenv | Environment variable management |
-| nodemon | Development auto-restart |
 
 ## 🚀 Quick Start
 
@@ -46,33 +64,32 @@ Client (curl / Mobile App / Frontend)
 - Node.js 18+
 - A free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 
-### Setup
+### Setup & Run
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file (or copy from `.env.example`):
+Create a `.env` file:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 PORT=3000
 NODE_ENV=development
-FREE_TIER_DAILY_LIMIT=20
 ```
-
-### Run
 
 ```bash
 npm run dev
 ```
 
-Server starts at `http://localhost:3000`
+Open **http://localhost:3000** in your browser 🎉
 
-### Test
+### Test via curl
 
 ```bash
-curl -s -X POST http://localhost:3000/api/suggest/test -H "Content-Type: application/json" -d "{\"message\": \"Hey! How are you?\"}"
+curl -s -X POST http://localhost:3000/api/suggest/test ^
+  -H "Content-Type: application/json" ^
+  -d "{\"message\": \"Hey! How are you?\"}"
 ```
 
 ## 📖 API Endpoints
@@ -80,9 +97,10 @@ curl -s -X POST http://localhost:3000/api/suggest/test -H "Content-Type: applica
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/health` | Health check |
+| GET | `/` | Web demo UI |
 | POST | `/api/suggest` | Generate AI reply suggestions |
 | POST | `/api/suggest/test` | Test endpoint (no rate limiting) |
-| GET | `/api/suggest/usage/:userId` | Check user's daily usage |
+| GET | `/api/suggest/usage/:userId` | Check daily usage |
 
 ### Example Response
 
@@ -90,18 +108,27 @@ curl -s -X POST http://localhost:3000/api/suggest/test -H "Content-Type: applica
 {
   "success": true,
   "suggestions": [
-    { "text": "Hey! I'm doing great, thanks for asking!", "tone": "casual", "label": "Friendly" },
+    { "text": "Hey! Doing great thanks for asking", "tone": "casual", "label": "Friendly" },
     { "text": "I'm well, thank you. How about yourself?", "tone": "professional", "label": "Polite" },
-    { "text": "Good, thanks! You?", "tone": "brief", "label": "Short" }
+    { "text": "Good thanks! You?", "tone": "brief", "label": "Short" },
+    { "text": "Great!", "tone": "quick", "label": "Quick Reply" }
   ]
 }
 ```
 
+## 🛡️ Rate Limit Protection
+
+| Protection | Details |
+|-----------|---------|
+| **Response Cache** | Same message = instant response from cache (5 min TTL) |
+| **Retry + Backoff** | Auto-retries on 429 errors (2s → 4s → 8s) |
+| **Frontend Cooldown** | 3-second gap enforced between requests |
+| **Daily Usage Limit** | Configurable per-user daily limit |
+
 ## 🔮 Future Plans
 
-- [ ] **React Native Mobile App** — Android & iOS frontend with message input UI
-- [ ] **Claude AI Integration** — Premium tier using Anthropic's Claude for higher quality
-- [ ] **Dark Mode** — UI theming support
-- [ ] **Voice-to-Text** — Respond using voice input
-- [ ] **Direct Keyboard Integration** — Access suggestions directly from your Android keyboard
+- [ ] **React Native Mobile App** — Android & iOS frontend
+- [ ] **Claude AI Integration** — Premium tier with Anthropic's Claude
+- [ ] **Direct Keyboard Integration** — Access from Android keyboard
+- [ ] **Voice-to-Text** — Reply using voice input
 - [ ] **Conversation History** — Save favorite responses locally
