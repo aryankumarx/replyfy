@@ -394,7 +394,8 @@
 <div class="toast" id="toast">✓ Copied to clipboard!</div>
 
 <script>
-  const API_URL = 'http://localhost:3000';
+  // Get the current domain automatically (works locally and on Render)
+  const API_URL = window.location.origin;
 
   // Character count
   const textarea = document.getElementById('messageInput');
