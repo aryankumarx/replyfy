@@ -67,3 +67,27 @@ coverage/
 # Misc
 *.pem
 .cache
+
+# ===== Only upload backend for now =====
+frontend/
+docs/
+
+# Template guide files (not part of the project)
+FREE_SETUP_GUIDE.md
+FREE_VS_PAID.md
+GETTING_STARTED.md
+INDEX.md
+MASTER_GUIDE.md
+PREREQUISITES.md
+PROJECT_SUMMARY.md
+QUICK_REFERENCE.md
+START_HERE.md
+FILE_FINDER.md
+quickstart.bat
+quickstart.sh
+
+# Debug/test files
+test_api_key.js
+test_boot.js
+test_output.txt
+last_gemini_raw.txt

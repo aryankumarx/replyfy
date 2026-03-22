@@ -1,58 +1,107 @@
-# 🤖 AI Keyboard Assistant
+# 🤖 AI Keyboard Assistant — Backend API
 
-An AI-powered mobile application designed to help you respond to messages quickly and contextually. It works as a smart companion for messaging apps like WhatsApp, Telegram, and SMS.
+A Node.js/Express backend that generates smart reply suggestions using **Google Gemini AI**. This is the server-side engine for a planned React Native mobile app.
 
-## 🌟 Key Features
+## 🌟 Features
 
-- ✅ **Smart Reply Suggestions**: Generates 3 contextual response options (Casual, Professional, Brief).
-- ✅ **Dual-Model Support**:
-  - **Gemini 2.5 Flash (Default)**: Free, fast, and high-quality responses using Google's AI.
-  - **Claude 3.5 Sonnet (Future)**: Support for Anthropic's Claude for pro-level conversational quality.
-- ✅ **Multi-Tone Support**: Toggle between Friendly, Formal, and Direct responses.
-- ✅ **Multi-Language**: Intelligent support for English, Hindi, and Hinglish.
-- ✅ **Privacy First**: Zero message storage on our servers (only passed to AI in real-time).
+- ✅ **AI-Powered Reply Suggestions** — Generates 3 contextual reply options for any incoming message
+- ✅ **Multi-Tone Responses** — Casual, Professional, and Brief suggestions
+- ✅ **Multi-Language** — English, Hindi, and Hinglish support
+- ✅ **Free AI** — Uses Google Gemini 2.5 Flash (completely free, no credit card needed)
+- ✅ **Rate Limiting & Security** — Helmet, CORS, and per-user daily usage limits
+- ✅ **Privacy First** — Zero message storage, messages are only passed to AI in real-time
 
-## 🏗️ Tech Stack
+## 🏗️ Architecture
 
-- **Frontend**: React Native (Android/iOS)
-- **Backend**: Node.js & Express.js
-- **State Management**: Zustand
-- **UI Framework**: React Native Paper (Material Design)
-- **AI Integration**: Google Gemini REST API & Anthropic SDK
+```
+Client (curl / Mobile App / Frontend)
+          │ HTTPS
+          ▼
+┌─────────────────────┐
+│  Express.js API     │
+│  (Node.js Backend)  │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  Google Gemini API   │
+│  (gemini-2.5-flash)  │
+└─────────────────────┘
+```
 
-## 🚀 Current Project Status
+## 🛠️ Tech Stack
 
-| Module | Status | Details |
-|--------|--------|---------|
-| **Backend API** | ✅ Ready | Express server with Gemini integration and rate limiting. |
-| **FREE Tier (Gemini)** | ✅ Working | Zero-cost AI suggestions using my 2.5-flash setup. |
-| **Android App** | 🚧 Beta | Basic UI for message input and suggestion display. |
-| **iOS App** | ⏳ Planned | Code exists but testing is pending. |
-| **Claude Integration**| ⏳ Planned | Code exists, switching requires a paid API key. |
+| Technology | Purpose |
+|-----------|---------|
+| Node.js & Express.js | REST API server |
+| Google Gemini 2.5 Flash | AI response generation (FREE) |
+| Helmet.js | Security headers |
+| express-rate-limit | Rate limiting |
+| dotenv | Environment variable management |
+| nodemon | Development auto-restart |
 
-## 🛠️ How to Run Locally
+## 🚀 Quick Start
 
-### 1. Backend Setup
+### Prerequisites
+- Node.js 18+
+- A free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+
+### Setup
+
 ```bash
 cd backend
 npm install
-# Update .env with your GEMINI_API_KEY
+```
+
+Create a `.env` file (or copy from `.env.example`):
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+PORT=3000
+NODE_ENV=development
+FREE_TIER_DAILY_LIMIT=20
+```
+
+### Run
+
+```bash
 npm run dev
 ```
 
-### 2. Frontend Setup
+Server starts at `http://localhost:3000`
+
+### Test
+
 ```bash
-cd frontend
-npm install
-npx react-native start
-# Press 'a' for Android or 'i' for iOS
+curl -s -X POST http://localhost:3000/api/suggest/test -H "Content-Type: application/json" -d "{\"message\": \"Hey! How are you?\"}"
 ```
 
-## 🛣️ Roadmap
+## 📖 API Endpoints
 
-- [ ] **Dark Mode Implementation**: High priority UI update.
-- [ ] **Voice-to-Text**: Respond to messages using your voice.
-- [ ] **Conversation History**: Save your favorite generated responses locally.
-- [ ] **Direct Keyboard Integration**: Making the assistant accessible directly from your Android keyboard.
-- [ ] **Claude AI Upgrade**: Improved tone accuracy and reasoning for Pro users.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/suggest` | Generate AI reply suggestions |
+| POST | `/api/suggest/test` | Test endpoint (no rate limiting) |
+| GET | `/api/suggest/usage/:userId` | Check user's daily usage |
 
+### Example Response
+
+```json
+{
+  "success": true,
+  "suggestions": [
+    { "text": "Hey! I'm doing great, thanks for asking!", "tone": "casual", "label": "Friendly" },
+    { "text": "I'm well, thank you. How about yourself?", "tone": "professional", "label": "Polite" },
+    { "text": "Good, thanks! You?", "tone": "brief", "label": "Short" }
+  ]
+}
+```
+
+## 🔮 Future Plans
+
+- [ ] **React Native Mobile App** — Android & iOS frontend with message input UI
+- [ ] **Claude AI Integration** — Premium tier using Anthropic's Claude for higher quality
+- [ ] **Dark Mode** — UI theming support
+- [ ] **Voice-to-Text** — Respond using voice input
+- [ ] **Direct Keyboard Integration** — Access suggestions directly from your Android keyboard
+- [ ] **Conversation History** — Save favorite responses locally
