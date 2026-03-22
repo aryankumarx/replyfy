@@ -1,16 +1,16 @@
 [
   {
-    "text": "Sounds good! Looking forward to it.",
+    "text": "I'm doing great, thanks for asking! How about you?",
     "tone": "casual",
     "label": "Friendly"
   },
   {
-    "text": "Acknowledged. I will plan accordingly for Monday.",
+    "text": "I am doing well, thank you for asking. I hope you are too.",
     "tone": "professional",
     "label": "Polite"
   },
   {
-    "text": "Okay, noted.",
+    "text": "I'm good, thanks. You?",
     "tone": "brief",
     "label": "Short"
   }

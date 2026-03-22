@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const suggestRoute = require('./routes/suggest');
@@ -9,8 +10,18 @@ const suggestRoute = require('./routes/suggest');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware (relaxed for web demo)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "http://localhost:3000"]
+    }
+  }
+}));
 
 // CORS configuration
 const corsOptions = {
@@ -40,6 +51,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Serve web demo frontend
+app.use(express.static(path.join(__dirname, '../../frontend')));
+
 // API routes
 app.use('/api/suggest', suggestRoute);
 
@@ -61,6 +75,7 @@ app.listen(PORT, () => {
   console.log(`🚀 AI Keyboard API running on port ${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔐 Gemini API Key: ${process.env.GEMINI_API_KEY ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`🌐 Web Demo: http://localhost:${PORT}`);
 });
 
 module.exports = app;
