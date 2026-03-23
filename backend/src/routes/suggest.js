@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const geminiService = require('../services/gemini.service');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 const router = express.Router();
 
@@ -193,6 +194,60 @@ router.post('/test', async (req, res) => {
       error: 'Test failed',
       details: error.message 
     });
+  }
+});
+
+/**
+ * POST /api/suggest/encrypted
+ * E2E Encrypted endpoint — mobile app sends AES-256 encrypted message,
+ * backend decrypts, processes with Gemini, encrypts response back.
+ * Even if someone intercepts the HTTPS traffic, they can't read the payload.
+ */
+router.post('/encrypted', verifyApiKey, suggestLimiter, async (req, res) => {
+  try {
+    const { encryptedMessage, userId = 'anonymous', userTier = 'free' } = req.body;
+
+    if (!encryptedMessage) {
+      return res.status(400).json({ error: 'encryptedMessage is required' });
+    }
+
+    // Decrypt the incoming message
+    let message;
+    try {
+      message = decrypt(encryptedMessage);
+    } catch (decryptErr) {
+      return res.status(400).json({ error: 'Failed to decrypt message. Invalid encryption key or format.' });
+    }
+
+    if (!message || message.length > 1000) {
+      return res.status(400).json({ error: 'Decrypted message is empty or too long' });
+    }
+
+    // Check daily limit
+    const usageCheck = checkDailyLimit(userId, userTier);
+    if (!usageCheck.allowed) {
+      return res.status(429).json({ error: 'Daily limit reached' });
+    }
+
+    // Generate suggestions
+    const result = await geminiService.generateSuggestions(message, { userId });
+
+    if (result.success) {
+      incrementUsage(userId);
+    }
+
+    // Encrypt the entire response before sending back
+    const encryptedResponse = encrypt(JSON.stringify({
+      success: result.success,
+      suggestions: result.suggestions,
+      metadata: result.metadata
+    }));
+
+    res.json({ encrypted: true, data: encryptedResponse });
+
+  } catch (error) {
+    console.error('Encrypted endpoint error:', error);
+    res.status(500).json({ error: 'Failed to process encrypted request' });
   }
 });
 
