@@ -152,18 +152,18 @@ curl -s -X POST http://localhost:3000/api/suggest/test ^
 
 ## 📱 Mobile App Features
 
-- ⌨️ **Clipboard Listener** — Automatically detects copied text from any app (WhatsApp, Instagram, etc.)
+- ⌨️ **Floating Chat Head** — Permanent overlay bubble (like Messenger) that instantly injects smart replies over any app.
+- 📋 **Clipboard Listener** — Instantly reads copied text when inside the app or via the chat head.
 - 🕵️ **Incognito Mode** — Privacy switch that completely pauses clipboard tracking
 - 🎨 **Dark Theme UI** — Premium dark-mode dashboard matching the web demo
-- 🔗 **Live API Connection** — Directly hits the deployed Render backend with secure API key
+- 🔗 **Live E2E Encrypted API** — Directly hits the deployed Render backend securely.
 
 ## 🔮 Future Plans
 
 - [x] ~~**React Native Mobile App**~~ — ✅ Built with clipboard listener & incognito mode
 - [x] ~~**API Security Hardening**~~ — ✅ API key auth + express-validator
 - [x] ~~**Multi-Language Support**~~ — ✅ English, Hindi, Hinglish detection
-- [ ] **Floating Bubble Widget** — Overlay bubble on WhatsApp (SYSTEM_ALERT_WINDOW)
+- [x] ~~**Floating Bubble Chat Head**~~ — ✅ Native Android overlay (SYSTEM_ALERT_WINDOW)
 - [ ] **Claude AI Integration** — Premium tier with Anthropic's Claude
-- [ ] **Background Clipboard Service** — Headless JS task for always-on monitoring
 - [ ] **Voice-to-Text** — Reply using voice input
 - [ ] **Conversation History** — Save favorite responses locally

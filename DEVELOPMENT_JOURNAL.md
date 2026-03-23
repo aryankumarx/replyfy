@@ -34,14 +34,14 @@ This document serves as the master record of everything built, configured, and d
   - **Incognito Mode:** A privacy switch that strictly disables clipboard parsing.
   - **Auto-Clipboard Listener:** Checks OS Clipboard every 1.5 seconds. If new text is copied from an app like WhatsApp, it captures it for processing.
 
-**Complex Android Fixes Implemented:**
-- **Gradle Version Override:** React Native 0.84 pulled Gradle 9.0 which natively stripped the `IBM_SEMERU` JVM vendor, causing the NDK C++ compiler to crash. *Fix:* Downgraded `gradle-wrapper.properties` to `8.10.2`.
-- **Java 17 Isolation:** The local environment was executing Gradle using an old system-wide Java 8 installation. *Fix:* Hardcoded `org.gradle.java.home` in `gradle.properties` to securely point to the bundled Android Studio JDK 17 (`jbr`).
-- **Device Resource Unlocking:** Overrode a corrupted Gradle Cache loop by manually killing the daemon (`./gradlew --stop`) and clearing the `transforms-*` cache to ensure a clean NDK compile.
+**Complex Custom Native Android Modules (`com.aikeyboardmobile`):**
+- **Floating Chat Head Service (`FloatingBubbleService.kt`):** A custom Foreground Service that draws a persistent `⌨️` bubble over ANY app (via `SYSTEM_ALERT_WINDOW`). Bypasses Android 10+ strict clipboard restrictions by polling the clipboard *on-tap* instead of background continuous listening.
+- **Native Bridge (`FloatingBubbleModule.kt`):** Exposes Kotlin overlay permission checks and service start/stop commands directly to the React Native JS thread for seamless setting toggles.
+- **Background E2E UI Injection:** Renders Android Native `TextView` layouts programmatically right over WhatsApp, fetching Encrypted API responses in real-time without waking up React Native's Metro JS context!
 
 ---
 
 ## 🔮 What Needs To Be Built Next (Roadmap)
-1. **Finish the Android Build:** Wait for the massive 10-minute NDK C++ compiler to finish its first run (`BUILD SUCCESSFUL`), and install it onto the emulator.
-2. **Native Floating Bubble (SYSTEM_ALERT_WINDOW):** Write a tiny piece of custom Java/Kotlin code that draws a floating icon over WhatsApp natively. (Since the 7-year-old `react-native-floating-bubble` package cannot be used with React Native 0.84+).
-3. **Headless JS Background Task:** Hook up `react-native-background-actions` so the Clipboard listener runs perfectly even when the AI Keyboard App is completely closed and swiped away!
+1. **Claude AI Integration**: Setup paid-tier fallback to Claude using Anthropic API.
+2. **Settings Configurations**: Local preferences for auto-clear delay times and chat-head themes.
+3. **Favorites Manager**: Save top replies locally via AsyncStorage.
