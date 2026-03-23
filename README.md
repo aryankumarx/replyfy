@@ -1,6 +1,8 @@
 # 🤖 AI Keyboard Assistant
 
-A smart AI-powered reply suggestion tool that generates contextual responses for any incoming message. Built with **Node.js/Express** backend and a **web demo UI**, powered by **Google Gemini AI** (completely free).
+A full-stack, AI-powered smart reply assistant that generates contextual responses for any incoming message. Features a **Node.js/Express** secure backend, a **web demo UI**, and a **React Native Android app** with clipboard listener & incognito mode — all powered by **Google Gemini AI** (completely free).
+
+> 🔗 **Live Demo:** [ai-keyboard-assistant.onrender.com](https://ai-keyboard-assistant.onrender.com)
 
 ## 🌟 Features
 
@@ -36,16 +38,34 @@ The project includes a sleek web demo at `http://localhost:3000` — just paste 
 ## 🏗️ Architecture
 
 ```
-Browser (Web Demo)
-       │
-       ▼
-┌───────────────────────┐      ┌────────────────────┐
-│  Express.js Backend   │ ──►  │  Google Gemini AI   │
-│  • API routes         │      │  (2.5-flash-lite)   │
-│  • Rate limiting      │ ◄──  │  FREE tier          │
-│  • Response cache     │      └────────────────────┘
-│  • Language detection │
-└───────────────────────┘
+Browser (Web Demo)       React Native App (Android)
+       │                        │
+       ▼                        ▼
+┌─────────────────────────────────────┐     ┌────────────────────┐
+│  Express.js Backend (Render.com)    │ ──► │  Google Gemini AI   │
+│  • API Key Auth (x-api-key)         │     │  (2.5-flash-lite)   │
+│  • Input Sanitization (XSS)         │ ◄── │  FREE tier           │
+│  • Rate limiting + Response Cache   │     └────────────────────┘
+│  • Hindi/Hinglish Language Detection│
+└─────────────────────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+ai-keyboard-assistant/
+├── backend/                 # Node.js/Express API (deployed on Render)
+│   ├── src/
+│   │   ├── server.js        # Express app with Helmet, CORS, CSP
+│   │   ├── routes/suggest.js# API key auth + express-validator
+│   │   └── services/gemini.service.js  # Gemini AI + cache + language detection
+│   └── .env                 # API keys (gitignored)
+├── frontend/                # Web demo (served by backend)
+│   └── index.html           # Glassmorphic dark-themed UI
+├── AIKeyboardMobile/        # React Native Android app
+│   ├── App.tsx              # Clipboard listener + Incognito mode
+│   └── android/             # Native Android build files
+└── DEVELOPMENT_JOURNAL.md   # Full development history & decisions
 ```
 
 ## 🛠️ Tech Stack
@@ -54,9 +74,12 @@ Browser (Web Demo)
 |-----------|---------|
 | Node.js & Express.js | REST API server |
 | Google Gemini 2.5 Flash-Lite | AI response generation (FREE) |
+| React Native (Bare) | Android mobile app |
 | Vanilla HTML/CSS/JS | Web demo frontend |
-| Helmet.js + CORS | Security |
+| express-validator | Input sanitization & XSS prevention |
+| Helmet.js + CORS | HTTP security headers |
 | express-rate-limit | Rate limiting |
+| @react-native-clipboard | Native clipboard access |
 
 ## 🚀 Quick Start
 
@@ -127,10 +150,20 @@ curl -s -X POST http://localhost:3000/api/suggest/test ^
 | **Frontend Cooldown** | 3-second gap enforced between requests |
 | **Daily Usage Limit** | Configurable per-user daily limit |
 
+## 📱 Mobile App Features
+
+- ⌨️ **Clipboard Listener** — Automatically detects copied text from any app (WhatsApp, Instagram, etc.)
+- 🕵️ **Incognito Mode** — Privacy switch that completely pauses clipboard tracking
+- 🎨 **Dark Theme UI** — Premium dark-mode dashboard matching the web demo
+- 🔗 **Live API Connection** — Directly hits the deployed Render backend with secure API key
+
 ## 🔮 Future Plans
 
-- [ ] **React Native Mobile App** — Android & iOS frontend
+- [x] ~~**React Native Mobile App**~~ — ✅ Built with clipboard listener & incognito mode
+- [x] ~~**API Security Hardening**~~ — ✅ API key auth + express-validator
+- [x] ~~**Multi-Language Support**~~ — ✅ English, Hindi, Hinglish detection
+- [ ] **Floating Bubble Widget** — Overlay bubble on WhatsApp (SYSTEM_ALERT_WINDOW)
 - [ ] **Claude AI Integration** — Premium tier with Anthropic's Claude
-- [ ] **Direct Keyboard Integration** — Access from Android keyboard
+- [ ] **Background Clipboard Service** — Headless JS task for always-on monitoring
 - [ ] **Voice-to-Text** — Reply using voice input
 - [ ] **Conversation History** — Save favorite responses locally
