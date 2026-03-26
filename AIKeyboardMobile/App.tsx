@@ -13,8 +13,11 @@ import {
   Modal,
   Animated,
   Dimensions,
+  NativeModules,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
+
+const { FloatingBubbleModule } = NativeModules;
 
 // ============ CONFIG ============
 const API_URL = 'https://ai-keyboard-assistant.onrender.com';
@@ -40,7 +43,8 @@ const looksLikePassword = (text: string): boolean => {
 const App = () => {
   // ============ STATE ============
   const [incognitoMode, setIncognitoMode] = useState(false);
-  const [listenerActive, setListenerActive] = useState(false); // OFF by default (permission-first)
+  const [listenerActive, setListenerActive] = useState(false); // OFF by default
+  const [bubbleActive, setBubbleActive] = useState(false);
   const [autoClearClipboard, setAutoClearClipboard] = useState(true);
   const [lastCopiedText, setLastCopiedText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -181,6 +185,45 @@ const App = () => {
     showToast('🔒 Running in manual mode');
   };
 
+  // ============ FLOATING BUBBLE TOGGLE ============
+  const toggleFloatingBubble = async (value: boolean) => {
+    if (value) {
+      try {
+        const hasPermission = await FloatingBubbleModule.checkOverlayPermission();
+        if (!hasPermission) {
+          Alert.alert(
+            'Overlay Permission Required',
+            'To show the floating bubble over WhatsApp or other apps, you must allow "Draw over other apps".',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Settings', onPress: () => FloatingBubbleModule.requestOverlayPermission() }
+            ]
+          );
+          setBubbleActive(false);
+          return;
+        }
+        
+        await FloatingBubbleModule.startService();
+        setBubbleActive(true);
+        showToast('🫧 Floating Bubble started (App can be closed now)');
+      } catch (e) {
+        showToast('❌ Failed to start bubble service');
+        setBubbleActive(false);
+      }
+    } else {
+      FloatingBubbleModule.stopService();
+      setBubbleActive(false);
+      showToast('🫧 Floating Bubble stopped');
+    }
+  };
+
+  // Ensure service stops if incognito mode is turned ON
+  useEffect(() => {
+    if (incognitoMode && bubbleActive) {
+      toggleFloatingBubble(false);
+    }
+  }, [incognitoMode]);
+
   // ============ RENDER ============
   return (
     <SafeAreaView style={styles.container}>
@@ -280,6 +323,20 @@ const App = () => {
                 onValueChange={setListenerActive}
                 trackColor={{ false: '#333', true: '#6366f1' }}
                 thumbColor={listenerActive ? '#ffffff' : '#888'}
+              />
+            </View>
+
+            <View style={styles.settingRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.settingText}>🫧 Floating Bubble Service</Text>
+                <Text style={styles.settingSubtext}>Shows a chat head when text is copied (Works when app is closed!)</Text>
+              </View>
+              <Switch
+                value={bubbleActive}
+                onValueChange={toggleFloatingBubble}
+                disabled={incognitoMode}
+                trackColor={{ false: '#333', true: '#10b981' }}
+                thumbColor={bubbleActive ? '#ffffff' : '#888'}
               />
             </View>
 
