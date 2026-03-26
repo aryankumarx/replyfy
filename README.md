@@ -1,6 +1,6 @@
 # 🤖 AI Keyboard Assistant
 
-A full-stack, AI-powered smart reply assistant that generates contextual responses for any incoming message. Features a **Node.js/Express** secure backend, a **web demo UI**, and a **React Native Android app** with clipboard listener & incognito mode — all powered by **Google Gemini AI** (completely free).
+A full-stack, AI-powered smart reply assistant that generates contextual responses for any incoming message. Features a **Node.js/Express** secure backend, a **web demo UI**, and a **React Native Android app** with clipboard listener, incognito mode, security dashboard & floating bubble overlay — all powered by **Google Gemini AI** (completely free).
 
 > 🔗 **Live Demo:** [ai-keyboard-assistant.onrender.com](https://ai-keyboard-assistant.onrender.com)
 
@@ -13,6 +13,8 @@ A full-stack, AI-powered smart reply assistant that generates contextual respons
 - ✅ **Free AI** — Uses Google Gemini 2.5 Flash-Lite (free tier, no credit card)
 - ✅ **Smart Rate Limiting** — Response caching, retry with backoff, cooldown protection
 - ✅ **Privacy First** — Zero message storage, processed in real-time only
+- ✅ **Password/Secret Detection** — Auto-blocks sensitive text (API keys, tokens, passwords)
+- ✅ **Auto-Clear Clipboard** — Wipes clipboard 10 seconds after copying a reply
 
 ## 🖥️ Web Demo
 
@@ -54,18 +56,26 @@ Browser (Web Demo)       React Native App (Android)
 
 ```
 ai-keyboard-assistant/
-├── backend/                 # Node.js/Express API (deployed on Render)
+├── backend/                      # Node.js/Express API (deployed on Render)
 │   ├── src/
-│   │   ├── server.js        # Express app with Helmet, CORS, CSP
-│   │   ├── routes/suggest.js# API key auth + express-validator
+│   │   ├── server.js             # Express app with Helmet, CORS, CSP
+│   │   ├── routes/suggest.js     # API key auth + express-validator
 │   │   └── services/gemini.service.js  # Gemini AI + cache + language detection
-│   └── .env                 # API keys (gitignored)
-├── frontend/                # Web demo (served by backend)
-│   └── index.html           # Glassmorphic dark-themed UI
-├── AIKeyboardMobile/        # React Native Android app
-│   ├── App.tsx              # Clipboard listener + Incognito mode
-│   └── android/             # Native Android build files
-└── DEVELOPMENT_JOURNAL.md   # Full development history & decisions
+│   └── .env                      # API keys (gitignored)
+├── frontend/                     # Web demo (served by backend)
+│   └── index.html                # Glassmorphic dark-themed UI
+├── AIKeyboardMobile/             # React Native Android app
+│   ├── App.tsx                   # Dashboard UI, clipboard listener, incognito mode
+│   └── android/
+│       └── app/src/main/java/com/aikeyboardmobile/
+│           ├── MainActivity.kt           # React Native entry point
+│           ├── MainApplication.kt        # App + native module registration
+│           ├── FloatingBubbleService.kt  # 🫧 Foreground service (overlay bubble)
+│           ├── FloatingBubbleModule.kt   # 🔌 React Native ↔ Kotlin bridge
+│           ├── FloatingBubblePackage.kt  # 📦 Native module package registration
+│           ├── ClipboardGrabberActivity.kt # 📋 Android 10+ clipboard workaround
+│           └── ChatAccessibilityService.kt # 🔗 Chat app detection service
+└── DEVELOPMENT_JOURNAL.md        # Full development history & decisions
 ```
 
 ## 🛠️ Tech Stack
@@ -75,6 +85,7 @@ ai-keyboard-assistant/
 | Node.js & Express.js | REST API server |
 | Google Gemini 2.5 Flash-Lite | AI response generation (FREE) |
 | React Native (Bare) | Android mobile app |
+| Kotlin | Native Android modules (overlay, clipboard, accessibility) |
 | Vanilla HTML/CSS/JS | Web demo frontend |
 | express-validator | Input sanitization & XSS prevention |
 | Helmet.js + CORS | HTTP security headers |
@@ -145,6 +156,8 @@ curl -s -X POST http://localhost:3000/api/suggest/test ^
 |-----------|---------|
 | **API Key Auth (`x-api-key`)** | Backend rejects unauthorized/public requests without a secret key |
 | **Input Sanitization (XSS)** | `express-validator` strictly escapes inputs & blocks payloads >1000 chars |
+| **Sensitive Text Detection** | Blocks passwords, API keys, tokens from being sent to AI |
+| **Auto-Clear Clipboard** | Clipboard wiped 10s after copying a reply (configurable) |
 | **Response Cache** | Same message = instant response from cache (5 min TTL) |
 | **Retry + Backoff** | Auto-retries on 429 errors (2s → 4s → 8s) |
 | **Frontend Cooldown** | 3-second gap enforced between requests |
@@ -152,18 +165,32 @@ curl -s -X POST http://localhost:3000/api/suggest/test ^
 
 ## 📱 Mobile App Features
 
-- ⌨️ **Floating Chat Head** — Permanent overlay bubble (like Messenger) that instantly injects smart replies over any app.
-- 📋 **Clipboard Listener** — Instantly reads copied text when inside the app or via the chat head.
-- 🕵️ **Incognito Mode** — Privacy switch that completely pauses clipboard tracking
-- 🎨 **Dark Theme UI** — Premium dark-mode dashboard matching the web demo
-- 🔗 **Live E2E Encrypted API** — Directly hits the deployed Render backend securely.
+### ✅ Working Features
+- 🎨 **Premium Dark Theme Dashboard** — Hand-coded React Native UI with animations, gradient cards, pulse indicators
+- 📋 **Clipboard Listener** — Instantly reads copied text when inside the app (configurable toggle)
+- 🕵️ **Incognito Mode** — Privacy switch that completely pauses all clipboard tracking
+- 🔒 **Password / Secret Detection** — Auto-blocks API keys, tokens, and password-like strings
+- 🧹 **Auto-Clear Clipboard** — Wipes clipboard 10 seconds after copying a smart reply
+- 🛡️ **Security Status Dashboard** — Live blocked count, auto-clear status, privacy mode indicator
+- ⚡ **Smart Reply Generation** — Sends copied text to Gemini AI and displays 4 toned replies
+- 🔐 **Privacy Permission Modal** — First-launch consent with clear privacy promises
+
+### 🚧 In Development
+- 🫧 **Floating Chat Head Bubble** — Native Android overlay service (code written, currently being debugged for emulator compatibility)
+- 🔗 **Accessibility Service Integration** — Auto-show bubble only in chat apps (WhatsApp, Telegram, etc.)
 
 ## 🔮 Future Plans
 
 - [x] ~~**React Native Mobile App**~~ — ✅ Built with clipboard listener & incognito mode
 - [x] ~~**API Security Hardening**~~ — ✅ API key auth + express-validator
 - [x] ~~**Multi-Language Support**~~ — ✅ English, Hindi, Hinglish detection
-- [x] ~~**Floating Bubble Chat Head**~~ — ✅ Native Android overlay (SYSTEM_ALERT_WINDOW)
+- [x] ~~**Security Dashboard**~~ — ✅ Blocked count, auto-clear, privacy indicators
+- [x] ~~**Password/Secret Detection**~~ — ✅ Auto-blocks sensitive text
+- [ ] **Floating Bubble Chat Head** — 🚧 Native Android overlay (in progress)
 - [ ] **Claude AI Integration** — Premium tier with Anthropic's Claude
 - [ ] **Voice-to-Text** — Reply using voice input
 - [ ] **Conversation History** — Save favorite responses locally
+
+## 👨‍💻 Built By
+
+**Aryan Kumar** — Privacy-first • Zero storage • Open source

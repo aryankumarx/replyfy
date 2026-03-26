@@ -1,97 +1,106 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 📱 AI Keyboard Mobile App
 
-# Getting Started
+The Android mobile companion for **AI Keyboard Assistant** — a privacy-first, React Native app with native Kotlin modules for clipboard management, smart reply generation, and floating overlay bubbles.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## ✅ Current Working Features
 
-## Step 1: Start Metro
+### 🎨 Dashboard UI (`App.tsx`)
+- Premium dark theme with animated pulse indicators & smooth transitions
+- **Clipboard Listener** toggle — polls clipboard every 1.5s for new copied text
+- **Incognito Mode** — one-tap privacy switch to pause all clipboard tracking
+- **Auto-Clear Clipboard** — wipes clipboard 10s after you copy a reply
+- **Security Status Card** — live blocked count, auto-clear status, privacy mode
+- **Smart Reply Cards** — tap any AI suggestion to copy it instantly
+- **Permission Modal** — first-launch consent with clear privacy promises
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+### 🛡️ Security (`App.tsx` + `FloatingBubbleService.kt`)
+- **Sensitive text detection** — automatically blocks API keys, tokens, passwords from being sent to AI
+- Pattern matching for: `sk-`, `api-`, `ghp_`, `AIza`, `Bearer`, `eyJ`, and mixed-case+digit+symbol strings
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### 🔌 Native Modules (Kotlin)
+| File | Purpose | Status |
+|------|---------|--------|
+| `FloatingBubbleService.kt` | Foreground service that draws a ⌨️ overlay bubble with input panel + reply cards | 🚧 Debugging |
+| `FloatingBubbleModule.kt` | React Native ↔ Kotlin bridge (start/stop service, check overlay permission) | ✅ Working |
+| `FloatingBubblePackage.kt` | Registers the native module with React Native | ✅ Working |
+| `ClipboardGrabberActivity.kt` | Invisible 1×1px Activity for legal clipboard reading on Android 10+ | 🚧 Debugging |
+| `ChatAccessibilityService.kt` | Detects active chat apps (WhatsApp, Telegram, etc.) to auto-show/hide bubble | 🚧 Not wired |
+| `MainActivity.kt` | Standard React Native entry point | ✅ Working |
+| `MainApplication.kt` | App bootstrap + native module registration | ✅ Working |
 
-```sh
-# Using npm
-npm start
+## 🚀 Getting Started
 
-# OR using Yarn
-yarn start
+### Prerequisites
+- Node.js 18+
+- Android Studio (with an emulator or physical device)
+- Java 17+
+
+### Setup
+
+```bash
+# Install JS dependencies
+npm install
+
+# Start Metro bundler
+npx react-native start
+
+# In another terminal — run on Android
+npx react-native run-android
 ```
 
-## Step 2: Build and run your app
+### If you see "Unable to load script" error
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+```bash
+# 1. Create assets directory
+mkdir android\app\src\main\assets
 
-### Android
+# 2. Bundle JS offline
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android\app\src\main\assets\index.android.bundle --assets-dest android\app\src\main\res
 
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+# 3. Run the app again
+npx react-native run-android
 ```
 
-### iOS
+### If running from Android Studio
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+```bash
+# Make sure Metro port is forwarded to emulator
+adb reverse tcp:8081 tcp:8081
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+# Then start Metro
+npx react-native start --reset-cache
 ```
 
-Then, and every time you update your native dependencies, run:
+## 📁 Key Files
 
-```sh
-bundle exec pod install
+```
+AIKeyboardMobile/
+├── App.tsx                  # Main dashboard UI (all working features)
+├── index.js                 # React Native entry point
+├── android/
+│   └── app/src/main/
+│       ├── AndroidManifest.xml              # Permissions & service declarations
+│       ├── res/xml/accessibility_service_config.xml
+│       ├── res/values/strings.xml
+│       └── java/com/aikeyboardmobile/
+│           ├── MainActivity.kt
+│           ├── MainApplication.kt
+│           ├── FloatingBubbleService.kt     # 🫧 Overlay bubble service
+│           ├── FloatingBubbleModule.kt      # 🔌 JS ↔ Kotlin bridge
+│           ├── FloatingBubblePackage.kt     # 📦 Module registration
+│           ├── ClipboardGrabberActivity.kt  # 📋 Clipboard workaround
+│           └── ChatAccessibilityService.kt  # 🔗 Chat app detector
+└── package.json
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 🔮 Roadmap
 
-```sh
-# Using npm
-npm run ios
+- [ ] Fix floating bubble overlay on emulator/device
+- [ ] Wire up accessibility service to auto-show bubble in chat apps only
+- [ ] Claude AI fallback integration
+- [ ] Local settings (auto-clear delay, theme customization)
+- [ ] Favorites manager (save top replies via AsyncStorage)
 
-# OR using Yarn
-yarn ios
-```
+## 👨‍💻 Built By
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+**Aryan Kumar** — Privacy-first • Zero storage • Open source
