@@ -58,9 +58,25 @@ class FloatingBubbleService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         clipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildNotification("Tap ⌨️ after copying text"))
+
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification("Tap ⌨️ after copying text"))
+            Log.d(TAG, "✅ Foreground service started successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ startForeground failed: ${e.message}", e)
+            stopSelf()
+            return
+        }
+
+        // Check overlay permission before trying to draw the bubble
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !android.provider.Settings.canDrawOverlays(this)) {
+            Log.e(TAG, "❌ SYSTEM_ALERT_WINDOW permission not granted!")
+            toast("❌ Overlay permission required — enable 'Draw over other apps'")
+            return
+        }
+
         showBubble()
-        Log.d(TAG, "✅ Service started")
+        Log.d(TAG, "✅ Bubble displayed")
     }
 
     override fun onDestroy() {

@@ -27,29 +27,35 @@
         </intent-filter>
       </activity>
 
-      <!-- Declare our Floating Bubble Service -->
-      <service android:name=".FloatingBubbleService" android:exported="false" android:foregroundServiceType="specialUse" />
+      <!-- Floating Bubble Service — needs <property> on Android 14+ (API 34) for specialUse -->
+      <service android:name=".FloatingBubbleService"
+          android:exported="false"
+          android:foregroundServiceType="specialUse">
+          <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+              android:value="floating_overlay_bubble" />
+      </service>
 
-      <!-- Declare our App Accessibility Service (like Grammarly) -->
-      <service 
+      <!-- Accessibility Service (like Grammarly) — detects active chat apps -->
+      <service
           android:name=".ChatAccessibilityService"
           android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
           android:exported="true">
           <intent-filter>
               <action android:name="android.accessibilityservice.AccessibilityService" />
           </intent-filter>
-          <meta-data 
+          <meta-data
               android:name="android.accessibilityservice"
               android:resource="@xml/accessibility_service_config" />
       </service>
 
-      <!-- Transparent Activity for Android 10+ background clipboard workaround -->
-      <activity 
+      <!-- Invisible 1x1px Activity for Android 10+ clipboard workaround -->
+      <activity
           android:name=".ClipboardGrabberActivity"
           android:theme="@android:style/Theme.Translucent.NoTitleBar"
           android:exported="false"
           android:excludeFromRecents="true"
           android:noHistory="true"
+          android:launchMode="singleInstance"
           android:taskAffinity=""
           android:autoRemoveFromRecents="true"
           android:stateNotNeeded="true" />

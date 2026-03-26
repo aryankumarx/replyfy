@@ -3,6 +3,7 @@ package com.aikeyboardmobile
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -25,18 +26,21 @@ class ClipboardGrabberActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 1x1 pixel, transparent, top-left corner
+        // Make this activity truly invisible — 1x1 pixel, fully transparent
         window.setLayout(1, 1)
         window.setGravity(Gravity.START or Gravity.TOP)
-        val a = window.attributes
-        a.x = 0; a.y = 0; a.dimAmount = 0f
-        a.flags = a.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-        window.attributes = a
+        window.attributes = window.attributes.also { a ->
+            a.x = 0; a.y = 0; a.dimAmount = 0f
+            a.alpha = 0f  // Fully transparent window
+            a.flags = a.flags or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        // We are now the foreground Activity — clipboard access is legal!
+        // We are now the foreground Activity — clipboard access is legal on Android 10+!
         var text = ""
         try {
             val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -49,12 +53,17 @@ class ClipboardGrabberActivity : Activity() {
             Log.e(TAG, "❌ ${e.message}")
         }
 
-        // Pass text back to the service
+        // Pass text back to the FloatingBubbleService
         onTextGrabbed?.invoke(text)
 
-        // Go back to previous app (WhatsApp) and die
-        moveTaskToBack(true)
-        finish()
-        overridePendingTransition(0, 0)
+        // Close immediately — go back to previous app (WhatsApp etc.)
+        finishAndRemoveTask()
+        // Suppress any transition animation
+        if (Build.VERSION.SDK_INT >= 34) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
+        } else {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
+        }
     }
 }
