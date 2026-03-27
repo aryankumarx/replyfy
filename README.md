@@ -28,7 +28,7 @@ Whether you're a busy professional managing work chats, a student juggling group
 
 | Active Chat Environment | Context-Aware Bubble | Instant AI Generation |
 | :---: | :---: | :---: |
-| <img src="docs/demo-chat.jpg" width="250" alt="Chat UI"> <br> *Reading messages* | <img src="docs/demo-bubble.jpg" width="250" alt="Floating Bubble"> <br> *Bubble appears on copy* | <img src="docs/demo-generate.jpg" width="250" alt="Smart Reply"> <br> *Instant context replies* |
+| <img src="docs/demo-chat.jpeg" width="250" alt="Chat UI"> <br> *Reading messages* | <img src="docs/demo-bubble.jpeg" width="250" alt="Floating Bubble"> <br> *Bubble appears on copy* | <img src="docs/demo-generate.jpeg" width="250" alt="Smart Reply"> <br> *Instant context replies* |
 
 ---
 
