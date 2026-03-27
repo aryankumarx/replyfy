@@ -20,18 +20,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
 
-/**
- * FloatingBubbleService — Final Version with 📋 Paste Button
- *
- * Flow:
- * 1. User copies text in WhatsApp
- * 2. Taps ⌨️ bubble → panel appears with EditText + 📋 Paste + 🚀 Generate
- * 3. Taps "📋 Paste" → launches invisible ClipboardGrabberActivity
- *    → reads clipboard (foreground = legal!) → auto-fills EditText
- *    → user stays in WhatsApp (moveTaskToBack)
- * 4. Taps "🚀 Generate" → API call → reply cards shown
- * 5. Taps a reply card → copied to clipboard → paste in WhatsApp!
- */
 class FloatingBubbleService : Service() {
 
     companion object {
@@ -52,9 +40,10 @@ class FloatingBubbleService : Service() {
     private var panelView: View? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
     private var currentMessage = ""
-    private var activeEditText: EditText? = null  // Reference to the EditText in the panel
+    private var activeEditText: EditText? = null
     
-    private var isInChatApp = false
+    // Default to true as a safe fallback! If Accessibility is off, it still triggers on copy.
+    private var isInChatApp = true
     private var isSelfCopy = false
     private var clipListener: ClipboardManager.OnPrimaryClipChangedListener? = null
 
@@ -75,7 +64,6 @@ class FloatingBubbleService : Service() {
             return
         }
 
-        // Check overlay permission before trying to draw the bubble
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !android.provider.Settings.canDrawOverlays(this)) {
             Log.e(TAG, "❌ SYSTEM_ALERT_WINDOW permission not granted!")
             toast("❌ Overlay permission required — enable 'Draw over other apps'")
@@ -87,7 +75,7 @@ class FloatingBubbleService : Service() {
         // Hide bubble initially until they copy text in a chat app!
         bubbleView?.visibility = View.GONE
 
-        // Listen for chat app state changes
+        // Listen for chat app state changes (from Accessibility Service)
         onChatAppStateChanged = { isChatApp ->
             android.os.Handler(mainLooper).post {
                 isInChatApp = isChatApp
@@ -132,7 +120,6 @@ class FloatingBubbleService : Service() {
         android.os.Handler(mainLooper).post { Toast.makeText(this, m, Toast.LENGTH_SHORT).show() }
     }
 
-    // ==================== NOTIFICATION ====================
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val ch = NotificationChannel(CHANNEL_ID, "AI Keyboard", NotificationManager.IMPORTANCE_LOW)
@@ -151,17 +138,17 @@ class FloatingBubbleService : Service() {
             .setContentIntent(pi).setOngoing(true).setSilent(true).build()
     }
 
-    // ==================== SECURITY ====================
     private fun isSensitive(t: String): Boolean {
         if (t.length < 4) return false
         for (p in SENSITIVE_PREFIXES) if (t.startsWith(p)) return true
-        val n = !t.contains(" "); val d = t.any { it.isDigit() }
+        val n = !t.contains(" ")
+        val d = t.any { it.isDigit() }
         val s = t.any { !it.isLetterOrDigit() && !it.isWhitespace() }
-        val u = t.any { it.isUpperCase() }; val l = t.any { it.isLowerCase() }
+        val u = t.any { it.isUpperCase() }
+        val l = t.any { it.isLowerCase() }
         return (n && d && s && t.length >= 8) || (n && u && l && d && t.length >= 10)
     }
 
-    // ==================== BUBBLE ====================
     private fun showBubble() {
         removeBubble()
         bubbleView = TextView(this).apply {
@@ -179,7 +166,6 @@ class FloatingBubbleService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL; x = dp(8); y = 0 }
 
-        // Drag + click
         var sX = 0; var sY = 0; var sTX = 0f; var sTY = 0f; var drag = false
         bubbleView?.setOnTouchListener { v, ev ->
             when (ev.action) {
@@ -211,7 +197,6 @@ class FloatingBubbleService : Service() {
         bubbleView = null
     }
 
-    // ==================== INPUT PANEL ====================
     private fun showInputPanel() {
         removePanel()
 
@@ -223,19 +208,16 @@ class FloatingBubbleService : Service() {
             setPadding(dp(20), dp(16), dp(20), dp(16)); elevation = 20f
         }
 
-        // Title
         container.addView(TextView(this).apply {
             text = "⌨️ AI Smart Reply"
             textSize = 16f; setTextColor(0xFF6366F1.toInt()); setPadding(0, 0, 0, dp(6))
         })
 
-        // Instruction
         container.addView(TextView(this).apply {
             text = "Tap 📋 Paste to grab your copied text, then Generate!"
             textSize = 12f; setTextColor(0xFFAAAAAA.toInt()); setPadding(0, 0, 0, dp(10))
         })
 
-        // EditText
         val editText = EditText(this).apply {
             hint = "Your copied text will appear here..."
             setHintTextColor(0xFF555555.toInt()); setTextColor(Color.WHITE); textSize = 14f
@@ -263,14 +245,11 @@ class FloatingBubbleService : Service() {
             }
             setPadding(dp(16), dp(13), dp(16), dp(13))
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(8) }
 
             setOnClickListener {
                 Log.d(TAG, "📋 Paste button tapped — launching ClipboardGrabber...")
-
-                // Set the callback BEFORE launching the activity
                 ClipboardGrabberActivity.onTextGrabbed = { grabbedText ->
                     Log.d(TAG, "📋 Callback received: '${grabbedText.take(60)}'")
                     android.os.Handler(mainLooper).post {
@@ -291,7 +270,6 @@ class FloatingBubbleService : Service() {
                     }
                 }
 
-                // Launch the invisible activity to grab clipboard
                 try {
                     val intent = Intent(this@FloatingBubbleService, ClipboardGrabberActivity::class.java)
                     intent.addFlags(
@@ -309,23 +287,23 @@ class FloatingBubbleService : Service() {
         }
         container.addView(pasteBtn)
 
-        // ===== ROW 2: Close =====
+        // ===== ROW 2: ✕ Close =====
         val closeBtn = TextView(this).apply {
-            text = "✕ Close"; textSize = 15f; setTextColor(0xFFF43F5E.toInt()); gravity = Gravity.CENTER
+            text = "✕ Close Panel"
+            textSize = 15f; setTextColor(0xFFF43F5E.toInt()); gravity = Gravity.CENTER
             background = GradientDrawable().apply {
                 setColor(0xFF2A2A35.toInt()); cornerRadius = dp(10).toFloat()
             }
             setPadding(dp(16), dp(13), dp(16), dp(13))
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
             )
             setOnClickListener { removePanel() }
         }
         container.addView(closeBtn)
+
         panelView = container
 
-        // Focusable so EditText works
         val pp = WindowManager.LayoutParams(
             (resources.displayMetrics.widthPixels * 0.88).toInt(),
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -343,8 +321,8 @@ class FloatingBubbleService : Service() {
         catch (e: Exception) { Log.e(TAG, "Panel: ${e.message}") }
     }
 
-    // ==================== REPLY PANEL ====================
     private fun showReplyPanel() {
+        // Purposely calling to remove old popup panel
         removePanel()
 
         val container = LinearLayout(this).apply {
@@ -373,7 +351,8 @@ class FloatingBubbleService : Service() {
         container.addView(loading)
 
         val closeBtn = TextView(this).apply {
-            text = "✕ Close"; textSize = 14f; setTextColor(0xFFF43F5E.toInt())
+            text = "✕ Close Panel"
+            textSize = 14f; setTextColor(0xFFF43F5E.toInt())
             gravity = Gravity.CENTER; setPadding(0, dp(16), 0, 0)
             setOnClickListener { removePanel() }
         }
@@ -433,7 +412,7 @@ class FloatingBubbleService : Service() {
                 this.text = text; textSize = 14f; setTextColor(Color.WHITE)
                 setPadding(0, dp(4), 0, 0)
             })
-             card.setOnClickListener {
+            card.setOnClickListener {
                 isSelfCopy = true
                 clipboardManager.setPrimaryClip(ClipData.newPlainText("AI Reply", text))
                 toast("✅ Copied! Paste in your chat")
@@ -447,11 +426,11 @@ class FloatingBubbleService : Service() {
     private fun removePanel() {
         try { panelView?.let { windowManager.removeView(it) } } catch (_: Exception) {}
         panelView = null; activeEditText = null
-        // Hide the bubble when panel is closed so it doesn't clutter the screen!
+        // Completely hide the bubble when panel is closed so it acts "stealthy".
+        // It will strictly reappear as soon as they copy text again due to onPrimaryClipChanged!
         bubbleView?.visibility = View.GONE
     }
 
-    // ==================== API ====================
     private fun callApi(msg: String): List<Pair<String, String>> {
         var err: Exception? = null
         for (i in 1..2) {
