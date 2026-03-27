@@ -83,6 +83,7 @@ frontend/package-lock.json
 frontend/node_modules/
 
 # Template guide files (not part of the project)
+CHANGELOG.txt
 FREE_SETUP_GUIDE.md
 FREE_VS_PAID.md
 GETTING_STARTED.md
