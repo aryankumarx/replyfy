@@ -67,9 +67,13 @@ coverage/
 # Misc
 *.pem
 .cache
+*.tar
+*.zip
 
 # ===== Project structure =====
-docs/
+docs/*
+!docs/*.jpeg
+!docs/*.png
 
 # Old React Native template files (not built by us)
 frontend/src/

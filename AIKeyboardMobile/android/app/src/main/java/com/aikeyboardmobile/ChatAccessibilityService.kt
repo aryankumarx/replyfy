@@ -60,13 +60,8 @@ class ChatAccessibilityService : AccessibilityService() {
             return
         }
 
-        val isChatApp = CHAT_APPS.contains(packageName)
-        Log.d(TAG, "Active App: $packageName | isChatApp: $isChatApp")
-
-        // Send a broadcast to the FloatingBubbleService to hide or show the Chat Head!
-        val intent = Intent("com.aikeyboardmobile.APP_STATE_CHANGED")
-        intent.putExtra("IS_CHAT_APP", isChatApp)
-        sendBroadcast(intent)
+        // Direct callback to FloatingBubbleService — much faster and more reliable than broadcasts
+        FloatingBubbleService.onChatAppStateChanged?.invoke(isChatApp)
     }
 
     override fun onInterrupt() {

@@ -186,24 +186,24 @@ NEVER reply in English.`;
 
 ${langInstruction}
 
-Generate exactly 4 reply suggestions:
-1. Casual (friendly/warm)
-2. Professional (polite/formal)
-3. Brief (short/direct, 1 sentence max)
-4. Quick (1-3 words ONLY, like "Ok!" or "Sure!" or "Haan bhai")
+Generate exactly 4 reply suggestions that sound EXTREMELY human, engaging, and interesting:
+1. Casual (Warm, super friendly, engaging. Include a matching emoji! 🌟)
+2. Witty / Fun (A clever, slightly humorous, or charming comeback. Make them smile!)
+3. Direct (Clear and straight to the point, but NOT robotic. Real-human tone.)
+4. Quick (1-3 words ONLY. Extremely casual, like "Haha nice", "For sure!", or "Done bro")
 
-IMPORTANT - Write like a REAL PERSON texting on WhatsApp:
-- NO unnecessary commas. Real people don't write "Haan, theek hai, milte hain" they write "Haan theek hai milte hain"
-- Use natural texting style. Keep it how real humans actually type
-- Avoid overly formal or robotic language
-- Use exclamation marks naturally not excessively
-- Max 100 characters for suggestions 1-3
-- Quick reply MUST be 1-3 words only
-- Match the EXACT language style of the incoming message
-- Output ONLY the JSON array
+IMPORTANT - BE EXTREMELY HUMAN AND ENGAGING:
+- Write exactly like an interesting, fun person texting on WhatsApp or Instagram.
+- NEVER use generic robotic AI phrases (like "I would be happy to" or "Yes, I agree").
+- Use modern texting style. Lowercase at the start is fine.
+- NO unnecessary punctuation. Real people text "Yeah that sounds good" not "Yes, that sounds good."
+- Add emojis naturally to make the replies feel alive and expressive! ✨
+- Match the EXACT language style of the incoming message. If they sound hype, match the energy!
+- Max 100 characters for suggestions 1-3.
+- Output ONLY the JSON array.
 
 JSON Format:
-[{"text":"...","tone":"casual","label":"Friendly"},{"text":"...","tone":"professional","label":"Polite"},{"text":"...","tone":"brief","label":"Short"},{"text":"...","tone":"quick","label":"Quick Reply"}]`;
+[{"text":"...","tone":"casual","label":"Friendly"}, {"text":"...","tone":"witty","label":"Witty"}, {"text":"...","tone":"direct","label":"Direct"}, {"text":"...","tone":"quick","label":"Quick Reply"}]`;
 
     try {
       const response = await this._fetchWithRetry(this.apiUrl, {
