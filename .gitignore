@@ -84,21 +84,19 @@ frontend/node_modules/
 
 # Template guide files (not part of the project)
 CHANGELOG.txt
-FREE_SETUP_GUIDE.md
-FREE_VS_PAID.md
-GETTING_STARTED.md
-INDEX.md
-MASTER_GUIDE.md
-PREREQUISITES.md
-PROJECT_SUMMARY.md
-QUICK_REFERENCE.md
-START_HERE.md
-FILE_FINDER.md
-quickstart.bat
-quickstart.sh
+*.md
+!README.md
 
-# Debug/test files
+# Legacy/Unused template directories
+/frontend/
+/docs/
+/android/
+
+# Debug/script files
 test_api_key.js
 test_boot.js
 test_output.txt
 last_gemini_raw.txt
+refactor.py
+quickstart.bat
+quickstart.sh

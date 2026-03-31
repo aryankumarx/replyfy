@@ -84,6 +84,17 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        
+        Properties properties = new Properties()
+        if (rootProject.file("local.properties").exists()) {
+            properties.load(rootProject.file("local.properties").newDataInputStream())
+        }
+        buildConfigField "String", "API_URL", "\"${properties.getProperty('API_URL', 'https://ai-keyboard-assistant.onrender.com')}\""
+        buildConfigField "String", "API_KEY", "\"${properties.getProperty('API_KEY', 'YOUR_API_KEY_HERE')}\""
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
     signingConfigs {
         debug {

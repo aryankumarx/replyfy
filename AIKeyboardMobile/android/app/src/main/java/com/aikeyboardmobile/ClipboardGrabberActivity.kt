@@ -38,9 +38,31 @@ class ClipboardGrabberActivity : Activity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            // Window has ACTUALLY gained focus — now clipboard read is guaranteed to work
+            grabClipboard()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        // We are now the foreground Activity — clipboard access is legal on Android 10+!
+        // Fallback: if onWindowFocusChanged doesn't fire (some devices), try after a delay
+        window.decorView.postDelayed({
+            if (!hasGrabbed) {
+                Log.d(TAG, "⏱️ Fallback clipboard read after delay")
+                grabClipboard()
+            }
+        }, 200)
+    }
+
+    private var hasGrabbed = false
+
+    private fun grabClipboard() {
+        if (hasGrabbed) return
+        hasGrabbed = true
+
         var text = ""
         try {
             val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

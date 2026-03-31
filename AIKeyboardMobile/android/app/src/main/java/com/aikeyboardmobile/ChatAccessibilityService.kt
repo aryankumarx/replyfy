@@ -60,6 +60,10 @@ class ChatAccessibilityService : AccessibilityService() {
             return
         }
 
+        // Check if the current foreground app is in our chat app list
+        val isChatApp = CHAT_APPS.contains(packageName)
+        Log.d(TAG, "App switched: $packageName → isChatApp=$isChatApp")
+
         // Direct callback to FloatingBubbleService — much faster and more reliable than broadcasts
         FloatingBubbleService.onChatAppStateChanged?.invoke(isChatApp)
     }
