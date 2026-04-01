@@ -14,7 +14,7 @@
 
 | Active Chat Environment | Context-Aware Bubble | Instant AI Generation |
 |-------------------------|---------------------|----------------------|
-| ![Chat UI](docs/demo-chat.jpeg) <br> <small>*Copying message*</small> | ![Floating Bubble](docs/demo-bubble.jpeg) <br> <small>*Bubble auto-appears*</small> | ![Smart Reply](docs/demo-generate.jpeg) <br> <small>*3 instant suggestions*</small> |
+| ![Chat UI](docs/demo-chat.jpeg) <br> <small>*Reading messages*</small> | ![Floating Bubble](docs/demo-bubble.jpeg) <br> <small>*Hit Bubble*</small> | ![Smart Reply](docs/demo-generate.jpeg) <br> <small>*4 instant suggestions*</small> |
 
 ---
 
