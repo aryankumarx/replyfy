@@ -89,7 +89,7 @@ android {
         if (rootProject.file("local.properties").exists()) {
             properties.load(rootProject.file("local.properties").newDataInputStream())
         }
-        buildConfigField "String", "API_URL", "\"${properties.getProperty('API_URL', 'https://ai-keyboard-assistant.onrender.com')}\""
+        buildConfigField "String", "API_URL", "\"${properties.getProperty('API_URL', 'https://replyfy.onrender.com')}\""
         buildConfigField "String", "API_KEY", "\"${properties.getProperty('API_KEY', 'YOUR_API_KEY_HERE')}\""
     }
     

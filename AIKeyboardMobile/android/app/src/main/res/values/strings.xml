@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">AIKeyboardMobile</string>
+    <string name="app_name">Replyfy</string>
     <string name="accessibility_service_description">AI Keyboard requires this permission to only show the Chat Head when you open WhatsApp, Instagram, or Telegram. It DOES NOT read your keystrokes or send your screen data anywhere.</string>
 </resources>

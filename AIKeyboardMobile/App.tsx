@@ -20,7 +20,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 const { FloatingBubbleModule } = NativeModules;
 
 // ============ CONFIG ============
-const API_URL = 'https://ai-keyboard-assistant.onrender.com';
+const API_URL = 'https://replyfy.onrender.com';
 const API_KEY = 'my-super-secret-key-12345';
 const { width } = Dimensions.get('window');
 

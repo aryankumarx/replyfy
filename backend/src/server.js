@@ -18,7 +18,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "http://localhost:3000", "https://ai-keyboard-assistant.onrender.com"]
+      connectSrc: ["'self'", "http://localhost:3000", "https://replyfy.onrender.com"]
     }
   }
 }));

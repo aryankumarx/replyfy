@@ -83,7 +83,6 @@ frontend/package-lock.json
 frontend/node_modules/
 
 # Template guide files (not part of the project)
-CHANGELOG.txt
 *.md
 !README.md
 

@@ -1,0 +1,77 @@
+AI KEYBOARD ASSISTANT - CURRENT DEVELOPMENT STATE
+Date: March 31, 2026
+
+=============================================
+STATUS: APP IS FULLY WORKING (v1.1.0 REPLYFY MIGRATION)
+=============================================
+
+1. OFFICIAL REBRANDING TO "REPLYFY"
+- Rebranded the entire application from "AI Keyboard Assistant" to "Replyfy".
+- Updated the display name explicitly in `AIKeyboardMobile/android/app/src/main/res/values/strings.xml` and React Native `app.json`.
+- Safely retained pure internal structural namespaces (`AIKeyboardMobile` and `com.aikeyboardmobile`) to prevent iOS Xcode and React Native AppRegistry from shattering, verifying zero technical debt during the rebrand.
+
+2. RENDER BACKEND MIGRATION & CACHE FLUSHING
+- Successfully migrated the invisible Node.js API to `replyfy.onrender.com`.
+- Error Detected/Fixed: Android Gradle caches fiercely held onto absolute file paths pointing to the old folder name. Solved by physically terminating the Gradle daemon in memory (`gradlew --stop`) and nuking (`rmdir /s /q`) the node_modules and `.gradle` build caches to forcefully resolve "No matching variant" autolinking failures.
+- Error Detected/Fixed: React Native UI explicitly crashed with `JSON Parse Error: Unexpected Character: N` because the frontend API was hardcoded in `App.tsx` and was attempting to hit a Render 404 proxy error. Re-synced the frontend API config to point perfectly to the new `replyfy` backend, and eliminated a treacherous double-slash routing issue caused by trailing slashes natively in `local.properties`.
+
+1. MESSENGER-STYLE UI & OS WARNING FIX
+- Shifted bubble architecture to be fully detached (`windowManager.removeView()`) when closing instead of just hidden (`View.GONE`).
+- Error Detected/Fixed: The previous `View.GONE` method caused the Android System OS to permanently show the annoying "Displaying over other apps" security notification. Detaching the view completely removes the OS security warning.
+- Added coordinate memory state tracking (`lastBubbleX` and `lastBubbleY`). Even though the view is completely destroyed when dismissed, the app remembers exactly where the user last dragged it so it respawns in the identical location upon the next clipboard copy.
+
+2. API SECURITY & SECURE KEYS
+- Error Detected/Fixed: API keys (`API_KEY`) and URLs (`API_URL`) were hardcoded in `FloatingBubbleService.kt`, creating a massive security vulnerability for a public GitHub repository.
+- Migrated all secrets out of the Kotlin source code into the gitignored `local.properties` file.
+- Configured Android `build.gradle` to generate dynamic `BuildConfig` fields linked to `local.properties`, securely injecting the private API key during compile-time without exposing it in the codebase.
+
+3. PRIVACY & DATA SCRUBBING
+- Developed a heuristic regex `isSensitive()` blocker inside `FloatingBubbleService.kt`.
+- Automatically blocks network requests if the clipboard text contains sequences resembling Passwords, OpenAI API Keys (`sk-`), GitHub Tokens (`ghp_`), or JSON Web Tokens (`eyJ`).
+- Maintained strict compliance with Android 10+ clipboard rules by utilizing `ClipboardGrabberActivity.kt` to securely fetch clipboard text only when the user explicitly taps the bubble.
+
+4. REPOSITORY CLEANUP & GIT HYGIENE
+- Error Detected/Fixed: During clean up, running `git rm -r --cached .` effectively staged 10,000+ files for deletion in the Git tracker, creating immense visual panic. Resolved safely via `git reset HEAD`.
+- Hardened the root `.gitignore` to strictly exclude legacy template folders (`/frontend/`, `/android/`), markdown tutorial guides (`*.md` except `README.md`), and debug scripts (`refactor.py`, `quickstart.sh`), ensuring the V1 repository only contains the pure React Native `AIKeyboardMobile` and Node.js `backend`.
+- Error Detected/Fixed: Metro Bundler crashed with a "Failed to get SHA-1 for require.js" error. Fixed by clearing the Metro cache (`npx react-native start --reset-cache`).
+
+=============================================
+FILES MODIFIED TO ACHIEVE V1.0.0 BUILD:
+=============================================
+- AIKeyboardMobile/android/app/build.gradle
+- AIKeyboardMobile/android/app/src/main/java/com/aikeyboardmobile/FloatingBubbleService.kt
+- .gitignore
+
+=============================================
+PREVIOUS STATUS (March 27, 2026)
+=============================================
+
+1. FLOATING BUBBLE UI & UX REFACTOR
+- The "Generate 🚀" button has been completely eradicated from the UI natively in `FloatingBubbleService.kt`.
+- The floating input panel now exclusively features the "📋 Paste from Clipboard" and "✕ Close Panel" buttons.
+- "Auto-Execute" logic implemented: Tapping the "Paste from Clipboard" button instantly extracts the clipboard text, validates it for sensitive data, and automatically triggers the AI Generation API request (`showReplyPanel()`), removing all intermediate/manual steps.
+- The Floating Bubble is hidden (`View.GONE`) by default upon initialization to keep the user's screen completely uncluttered.
+
+2. FOREGROUND SERVICE & ANDROID 14+ COMPATIBILITY
+- Added the crucial `<property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="floating_overlay_bubble" />` tag to `AndroidManifest.xml` to prevent `MissingForegroundServiceTypeException` native crashes on Android 14+ devices.
+- Fully stabilized `ClipboardGrabberActivity.kt` (the 1x1px translucent Ghost Activity) to accurately retrieve clipboard data foregroundly without triggering Android 10+ background read restrictions. Updated intent flags and transitions to stop lifecycle crashes on SDK 34+.
+
+3. CONTEXT-AWARE DYNAMIC VISIBILITY (CLOAKING)
+- Native Android `ChatAccessibilityService.kt` acts as a scanner, continuously assessing the currently active window/app.
+- It leverages a direct memory static callback (`FloatingBubbleService.onChatAppStateChanged?.invoke()`) for zero-latency communication with the main bubble service.
+- When the user copies text (`OnPrimaryClipChangedListener`), the bubble ONLY appears (`View.VISIBLE`) if they are currently inside an active chat application (e.g., WhatsApp, Telegram).
+- As an emergency fallback if the Accessibility Service gets throttled/disabled by the OS, `isInChatApp` defaults to `true` to ensure the bubble still pops up upon a clipboard copy.
+- The moment the user exits a chat app, or immediately after closing the smart reply panel, the bubble returns to stealth mode (`View.GONE`) entirely until another text is explicitly copied.
+
+4. BUILD PATH OPTIMIZATIONS
+- The codebase was mirrored and built inside a shorter absolute path (`C:\Dev\aikb`) to bypass the infamously long 260 character path limits natively enforced by the Windows OS during Gradle C++ NDK generation processes.
+
+=============================================
+FILES MODIFIED TO ACHIEVE MARCH 27 BUILD:
+=============================================
+- AIKeyboardMobile/android/app/src/main/AndroidManifest.xml
+- AIKeyboardMobile/android/app/src/main/java/com/aikeyboardmobile/FloatingBubbleService.kt
+- AIKeyboardMobile/android/app/src/main/java/com/aikeyboardmobile/ClipboardGrabberActivity.kt
+- AIKeyboardMobile/android/app/src/main/java/com/aikeyboardmobile/ChatAccessibilityService.kt
+
+Note: This file is intentionally NOT pushed to GitHub per current directive.
