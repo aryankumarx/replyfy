@@ -1,13 +1,24 @@
 <div align="center">
   
 # Replyfy - V1.1.0 Beta
-*Context-aware AI typing companion for WhatsApp, Telegram, SMS*
+*Never type another boring reply again*
 
-[![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) [![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/aryankumarx/replyfy/releases)
+[![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) 
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/aryankumarx/replyfy/releases)
 
 </div>
 
+## 📸 See It In Action
+
+*Seamless floating interface over WhatsApp, Telegram, and SMS*
+
+| Active Chat Environment | Context-Aware Bubble | Instant AI Generation |
+|-------------------------|---------------------|----------------------|
+| ![Chat UI](docs/demo-chat.jpeg) <br> <small>*Copying message*</small> | ![Floating Bubble](docs/demo-bubble.jpeg) <br> <small>*Bubble auto-appears*</small> | ![Smart Reply](docs/demo-generate.jpeg) <br> <small>*3 instant suggestions*</small> |
+
 ---
+
+
 
 ## Overview
 
@@ -148,7 +159,7 @@ cd replyfy/AIKeyboardMobile/android
 - [Bug Reports](https://github.com/aryankumarx/replyfy/issues)
 - Email: aryanvoid505@gmail.com
 
----
+
 
 ## License
 
@@ -157,10 +168,8 @@ cd replyfy/AIKeyboardMobile/android
 ---
 
 <div align="center">
-**Made by Aryan Kumar**  
+
+**Made by Aryan Kumar**
+
 <a href="https://github.com/aryankumarx"><img src="https://img.shields.io/badge/GitHub-Follow-blue?logo=github" alt="Follow on GitHub"></a>
 </div>
-
-
-
-
