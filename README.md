@@ -169,7 +169,7 @@ cd replyfy/AIKeyboardMobile/android
 
 <div align="center">
 
-**Made by Aryan Kumar**
+**Made With ❤️ by Aryan Kumar**
 
 <a href="https://github.com/aryankumarx"><img src="https://img.shields.io/badge/GitHub-Follow-blue?logo=github" alt="Follow on GitHub"></a>
 </div>
