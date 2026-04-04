@@ -1,12 +1,12 @@
 # Dependencies
-node_modules/
+**/node_modules/
 .pnp
 .pnp.js
 
 # Environment variables
-.env
-.env.local
-.env.production
+**/.env
+**/.env.local
+**/.env.production
 
 # Logs
 logs
@@ -92,10 +92,13 @@ frontend/node_modules/
 /android/
 
 # Debug/script files
-test_api_key.js
-test_boot.js
+**/test_api_key.js
+**/test_boot.js
 test_output.txt
 last_gemini_raw.txt
 refactor.py
 quickstart.bat
 quickstart.sh
+**/*.jks
+**/*.keystore
+/tmp/

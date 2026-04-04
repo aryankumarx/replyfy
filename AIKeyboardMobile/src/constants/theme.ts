@@ -1,0 +1,21 @@
+// src/constants/theme.ts
+export const C = {
+  bg:               '#0e0e13',
+  surface:          '#19191f',
+  surfaceHigh:      '#1f1f26',
+  surfaceHighest:   '#25252d',
+  surfaceLow:       '#131319',
+  primary:          '#a3a6ff',
+  primaryDim:       '#6063ee',
+  primaryContainer: '#9396ff',
+  onSurface:        '#f9f5fd',
+  onSurfaceVar:     '#acaab1',
+  outline:          '#76747b',
+  outlineVar:       '#48474d',
+  green:            '#10b981',
+  red:              '#f43f5e',
+  redDim:           '#d73357',
+  tertiary:         '#ffa5d9',
+  white10:          'rgba(255,255,255,0.06)',
+  white40:          'rgba(255,255,255,0.4)',
+};
