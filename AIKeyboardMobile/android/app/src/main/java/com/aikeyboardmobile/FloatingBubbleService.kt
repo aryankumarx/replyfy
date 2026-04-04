@@ -59,6 +59,11 @@ class FloatingBubbleService : Service() {
     private var screenWidth = 0
     private var screenHeight = 0
     private val bubbleSize by lazy { dp(56) }
+    private var isServiceRunning = false
+    private var isPeeking = false
+    private val peekHidePercent = 0.75f // Hide 75% of the bubble off-screen
+    private val hideHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val hideRunnable = Runnable { togglePeeking(true) }
 
     // Chat app awareness (defaults true so it works without Accessibility Service)
     private var isInChatApp = true
@@ -111,6 +116,7 @@ class FloatingBubbleService : Service() {
         // ═══════════════════════════════════════════════════════════
         // MESSENGER-STYLE: Bubble is VISIBLE immediately on start
         // ═══════════════════════════════════════════════════════════
+        isServiceRunning = true
         showBubble()
 
         // Listen for chat app state changes (from Accessibility Service)
@@ -158,10 +164,11 @@ class FloatingBubbleService : Service() {
     }
 
     override fun onDestroy() {
+        isServiceRunning = false
         clipListener?.let { clipboardManager.removePrimaryClipChangedListener(it) }
         onChatAppStateChanged = null
-        removeBubble()
         removePanel()
+        removeBubble()
         hideDismissZone()
         ClipboardGrabberActivity.onTextGrabbed = null
         super.onDestroy()
@@ -177,7 +184,8 @@ class FloatingBubbleService : Service() {
         bubbleView = TextView(this).apply {
             text = "⌨️"; textSize = 24f; gravity = Gravity.CENTER; elevation = 10f
             background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL; setColor(0xFF6366F1.toInt())
+                shape = GradientDrawable.OVAL; setColor(0xAA6063EE.toInt()) // Glassy Primary Indigo (Alpha 0xAA)
+                setStroke(dp(2), 0x40FFFFFF.toInt()) // Glass edge
             }
         }
 
@@ -202,6 +210,8 @@ class FloatingBubbleService : Service() {
         bubbleView?.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    hideHandler.removeCallbacks(hideRunnable)
+                    if (isPeeking) togglePeeking(false)
                     initialX = bubbleParams!!.x
                     initialY = bubbleParams!!.y
                     initialTouchX = event.rawX
@@ -238,6 +248,8 @@ class FloatingBubbleService : Service() {
                     if (!isDragging) {
                         // ══════ TAP: Read clipboard & process ══════
                         handleBubbleTap()
+                        // Reset idle timer
+                        hideHandler.postDelayed(hideRunnable, 3000)
                     } else {
                         // ══════ DRAG ENDED: Dismiss or snap to edge ══════
                         val centerX = bubbleParams!!.x + bubbleSize / 2
@@ -250,13 +262,12 @@ class FloatingBubbleService : Service() {
                         )
 
                         if (dist < dp(70)) {
-                            // Dropped in dismiss zone → completely remove view to hide OS warning
                             removeBubble()
-                            toast("Bubble dismissed — reopen from app")
-                            Log.d(TAG, "🗑️ Bubble dismissed by user")
+                            toast("Bubble dismissed")
                         } else {
-                            // Snap to nearest horizontal edge (Messenger-style)
                             snapToEdge()
+                            // Schedule auto-peek after snap
+                            hideHandler.postDelayed(hideRunnable, 3000)
                         }
                     }
                     true
@@ -267,8 +278,10 @@ class FloatingBubbleService : Service() {
         }
 
         try {
-            windowManager.addView(bubbleView, bubbleParams)
-            Log.d(TAG, "✅ Bubble added — visible immediately")
+            if (isServiceRunning) {
+                windowManager.addView(bubbleView, bubbleParams)
+                Log.d(TAG, "✅ Bubble added — visible immediately")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "❌ Bubble add failed: ${e.message}")
         }
@@ -299,10 +312,42 @@ class FloatingBubbleService : Service() {
         animator.start()
     }
 
+    private fun togglePeeking(peek: Boolean) {
+        if (peek == isPeeking || bubbleParams == null || bubbleView == null) return
+        isPeeking = peek
+        
+        val currentX = bubbleParams!!.x
+        val isLeft = currentX + bubbleSize / 2 < screenWidth / 2
+        val margin = dp(8)
+        
+        val targetX = if (peek) {
+            if (isLeft) -(bubbleSize * peekHidePercent).toInt()
+            else screenWidth - (bubbleSize * (1 - peekHidePercent)).toInt()
+        } else {
+            if (isLeft) margin
+            else screenWidth - bubbleSize - margin
+        }
+
+        val anim = ValueAnimator.ofInt(currentX, targetX)
+        anim.duration = 400
+        anim.interpolator = DecelerateInterpolator()
+        anim.addUpdateListener { a ->
+            bubbleParams?.let { p ->
+                p.x = a.animatedValue as Int
+                try { windowManager.updateViewLayout(bubbleView, p) } catch (_: Exception) {}
+            }
+        }
+        anim.start()
+        bubbleView?.animate()?.alpha(if (peek) 0.4f else 1.0f)?.setDuration(400)?.start()
+    }
+
     /**
      * Pulse animation on bubble — visual hint when user copies text.
      */
     private fun pulseBubble() {
+        hideHandler.removeCallbacks(hideRunnable)
+        if (isPeeking) togglePeeking(false)
+        
         bubbleView?.let { view ->
             view.animate()
                 .scaleX(1.4f).scaleY(1.4f)
@@ -313,6 +358,9 @@ class FloatingBubbleService : Service() {
                         .scaleX(1.0f).scaleY(1.0f)
                         .setDuration(300)
                         .setInterpolator(DecelerateInterpolator())
+                        .withEndAction {
+                            hideHandler.postDelayed(hideRunnable, 5000)
+                        }
                         .start()
                 }
                 .start()
@@ -439,14 +487,18 @@ class FloatingBubbleService : Service() {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable().apply {
-                setColor(0xFF1A1A24.toInt()); cornerRadius = dp(16).toFloat()
+                setColor(0xDD0E0E13.toInt()); // Glassy App BG (Alpha 0xDD)
+                cornerRadius = dp(24).toFloat()
+                setStroke(dp(1), 0x30FFFFFF.toInt()) // Brighter glass edge
             }
-            setPadding(dp(20), dp(20), dp(20), dp(20)); elevation = 20f
+            setPadding(dp(22), dp(22), dp(22), dp(22)); elevation = 30f
         }
 
         container.addView(TextView(this).apply {
-            text = "⌨️  AI Smart Replies"
-            textSize = 17f; setTextColor(0xFF6366F1.toInt()); setPadding(0, 0, 0, dp(12))
+            text = "✨  AI SMART REPLIES"
+            textSize = 14f; setTextColor(0xFFA3A6FF.toInt()); // App Primary color
+            letterSpacing = 0.1f; setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp(12))
         })
 
         val preview = currentMessage.take(80) + if (currentMessage.length > 80) "..." else ""
@@ -507,7 +559,9 @@ class FloatingBubbleService : Service() {
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 background = GradientDrawable().apply {
-                    setColor(0xFF2A2A35.toInt()); cornerRadius = dp(12).toFloat()
+                    setColor(0x8019191F.toInt()); // Semi-transparent glass surface
+                    cornerRadius = dp(16).toFloat()
+                    setStroke(dp(1), 0x20FFFFFF.toInt())
                 }
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 layoutParams = LinearLayout.LayoutParams(
@@ -516,7 +570,8 @@ class FloatingBubbleService : Service() {
             }
             card.addView(TextView(this).apply {
                 this.text = label.uppercase()
-                textSize = 11f; setTextColor(0xFF10B981.toInt())
+                textSize = 10f; setTextColor(0xFF6063EE.toInt()); // App Primary Dim color
+                letterSpacing = 0.15f; setTypeface(null, android.graphics.Typeface.BOLD)
             })
             card.addView(TextView(this).apply {
                 this.text = text; textSize = 14f; setTextColor(Color.WHITE)
@@ -569,8 +624,10 @@ class FloatingBubbleService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(CHANNEL_ID, "AI Keyboard", NotificationManager.IMPORTANCE_LOW)
+            val ch = NotificationChannel(CHANNEL_ID, "Replyfy Service", NotificationManager.IMPORTANCE_NONE)
+            ch.description = "Background listener for clipboard events"
             ch.setShowBadge(false)
+            ch.lockscreenVisibility = Notification.VISIBILITY_SECRET
             getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
         }
     }
@@ -590,11 +647,14 @@ class FloatingBubbleService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("⌨️ AI Keyboard Active").setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_menu_edit)
-            .setContentIntent(pi)
-            .addAction(android.R.drawable.ic_menu_view, "Open App", openAppIntent)
-            .setOngoing(true).setSilent(true).build()
+            .setSmallIcon(android.R.color.transparent)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setShowWhen(false)
+            .setOngoing(true)
+            .setSilent(true)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .build()
     }
 
     private fun isSensitive(t: String): Boolean {
@@ -638,8 +698,18 @@ class FloatingBubbleService : Service() {
         if (c.responseCode != 200) { c.disconnect(); throw Exception("Server ${c.responseCode}") }
         val b = BufferedReader(InputStreamReader(c.inputStream)).readText(); c.disconnect()
         val a = JSONObject(b).getJSONArray("suggestions")
-        return (0 until a.length()).map {
-            a.getJSONObject(it).let { o -> Pair(o.getString("label"), o.getString("text")) }
+        val prefs = getSharedPreferences("BubblePrefs", Context.MODE_PRIVATE)
+        val selectedTones = prefs.getStringSet("selectedTones", null)
+
+        val result = mutableListOf<Pair<String, String>>()
+        for (i in 0 until a.length()) {
+            val o = a.getJSONObject(i)
+            val toneId = o.optString("tone", "")
+            // Always show all if none are selected (fallback) or if they match
+            if (selectedTones == null || selectedTones.isEmpty() || selectedTones.contains(toneId)) {
+                result.add(Pair(o.getString("label"), o.getString("text")))
+            }
         }
+        return result
     }
 }

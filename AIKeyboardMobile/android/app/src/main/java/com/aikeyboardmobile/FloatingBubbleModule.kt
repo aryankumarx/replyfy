@@ -83,6 +83,19 @@ class FloatingBubbleModule(private val reactContext: ReactApplicationContext) :
     }
 
     /**
+     * Save selected tones to SharedPreferences so the Service can read them.
+     */
+    @ReactMethod
+    fun setTones(tones: ReadableArray) {
+        val prefs = reactContext.getSharedPreferences("BubblePrefs", android.content.Context.MODE_PRIVATE)
+        val set = mutableSetOf<String>()
+        for (i in 0 until tones.size()) {
+            tones.getString(i)?.let { set.add(it) }
+        }
+        prefs.edit().putStringSet("selectedTones", set).apply()
+    }
+
+    /**
      * Emit an event to JavaScript (used by the service to send clipboard data)
      */
     fun emitEvent(eventName: String, data: WritableMap) {
