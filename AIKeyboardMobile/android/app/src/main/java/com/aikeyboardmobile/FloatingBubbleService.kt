@@ -503,7 +503,6 @@ class FloatingBubbleService : Service() {
 
     private fun renderCards(c: LinearLayout, close: TextView, items: List<Pair<String, String>>) {
         c.removeView(close)
-        val em = mapOf("friendly" to "🌟", "witty" to "🔥", "direct" to "⚡", "quick reply" to "💬")
         for ((label, text) in items) {
             val card = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -516,7 +515,7 @@ class FloatingBubbleService : Service() {
                 ).apply { bottomMargin = dp(8) }
             }
             card.addView(TextView(this).apply {
-                this.text = "${em[label.lowercase()] ?: "💬"} ${label.uppercase()}"
+                this.text = label.uppercase()
                 textSize = 11f; setTextColor(0xFF10B981.toInt())
             })
             card.addView(TextView(this).apply {
@@ -526,7 +525,7 @@ class FloatingBubbleService : Service() {
             card.setOnClickListener {
                 isSelfCopy = true
                 clipboardManager.setPrimaryClip(ClipData.newPlainText("AI Reply", text))
-                toast("✅ Copied! Paste in your chat")
+                toast("Copied!")
                 removePanel()
                 // ═══ MESSENGER-STYLE: Bubble STAYS visible after copying a reply ═══
             }

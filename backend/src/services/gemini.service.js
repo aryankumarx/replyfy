@@ -186,24 +186,24 @@ NEVER reply in English.`;
 
 ${langInstruction}
 
-Generate exactly 4 reply suggestions that sound EXTREMELY human, engaging, and interesting:
-1. Casual (Warm, super friendly, engaging. Include a matching emoji! 🌟)
-2. Witty / Fun (A clever, slightly humorous, or charming comeback. Make them smile!)
-3. Direct (Clear and straight to the point, but NOT robotic. Real-human tone.)
-4. Quick (1-3 words ONLY. Extremely casual, like "Haha nice", "For sure!", or "Done bro")
+Generate exactly 6 reply suggestions with distinctly different, highly expressive personalities:
+1. Gen Z - Speak fluent Gen Z internet slang. Use modern abbreviations naturally.
+2. Sarcastic - Provide a witty comeback with a hint of dry sarcasm. Keep it playful.
+3. Sweet - Warm and affectionate.
+4. Professional - Polished, business-appropriate, and formally courteous.
+5. Decline - Politely disagree, say no to a plan, or express disagreement with the statement.
+6. Quick Reply - Respond in the shortest way physically possible. Maximum 5 words.
 
-IMPORTANT - BE EXTREMELY HUMAN AND ENGAGING:
-- Write exactly like an interesting, fun person texting on WhatsApp or Instagram.
-- NEVER use generic robotic AI phrases (like "I would be happy to" or "Yes, I agree").
-- Use modern texting style. Lowercase at the start is fine.
+IMPORTANT RULES & NO CONTEXT HANDLER:
+- Write exactly like a real person texting from a phone.
+- Use emojis ONLY when absolutely natural. Do not force emojis into every sentence.
 - NO unnecessary punctuation. Real people text "Yeah that sounds good" not "Yes, that sounds good."
-- Add emojis naturally to make the replies feel alive and expressive! ✨
-- Match the EXACT language style of the incoming message. If they sound hype, match the energy!
-- Max 100 characters for suggestions 1-3.
+- Match the EXACT language structure of the incoming message.
+- If the received message is extremely short (like "ok", "hi") or lacks context, do NOT invent fake stories. Simply respond with realistic conversational fillers (e.g. "what's up?", "and?", "huh?").
 - Output ONLY the JSON array.
 
 JSON Format:
-[{"text":"...","tone":"casual","label":"Friendly"}, {"text":"...","tone":"witty","label":"Witty"}, {"text":"...","tone":"direct","label":"Direct"}, {"text":"...","tone":"quick","label":"Quick Reply"}]`;
+[{"text":"...","tone":"genz","label":"Gen Z"}, {"text":"...","tone":"sarcastic","label":"Sarcastic"}, {"text":"...","tone":"sweet","label":"Sweet"}, {"text":"...","tone":"professional","label":"Professional"}, {"text":"...","tone":"decline","label":"Decline"}, {"text":"...","tone":"quick","label":"Quick Reply"}]`;
 
     try {
       const response = await this._fetchWithRetry(this.apiUrl, {

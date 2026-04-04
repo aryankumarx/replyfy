@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  Modal,
   Animated,
+  Easing,
   Dimensions,
   NativeModules,
 } from 'react-native';
@@ -19,509 +19,658 @@ import Clipboard from '@react-native-clipboard/clipboard';
 
 const { FloatingBubbleModule } = NativeModules;
 
-// ============ CONFIG ============
-const API_URL = 'https://replyfy.onrender.com';
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const API_URL = 'http://10.0.2.2:3000'; // TEST MODE — 10.0.2.2 = host PC from Android emulator
 const API_KEY = 'my-super-secret-key-12345';
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// ============ PASSWORD DETECTION (AppSec) ============
+// ══════════════════════════════════════════════
+// DESIGN TOKENS — Indigo Cyber (from Stitch)
+// ══════════════════════════════════════════════
+const C = {
+  bg:               '#0e0e13',
+  surface:          '#19191f',
+  surfaceHigh:      '#1f1f26',
+  surfaceHighest:   '#25252d',
+  surfaceLow:       '#131319',
+  primary:          '#a3a6ff',
+  primaryDim:       '#6063ee',
+  primaryContainer: '#9396ff',
+  onSurface:        '#f9f5fd',
+  onSurfaceVar:     '#acaab1',
+  outline:          '#76747b',
+  outlineVar:       '#48474d',
+  green:            '#10b981',
+  red:              '#f43f5e',
+  redDim:           '#d73357',
+  tertiary:         '#ffa5d9',
+  white10:          'rgba(255,255,255,0.06)',
+  white40:          'rgba(255,255,255,0.4)',
+};
+
+// ══════════════════════════════════════════════
+// AVAILABLE TONES
+// ══════════════════════════════════════════════
+const ALL_TONES = [
+  { id: 'genz',         label: 'Gen Z',        desc: 'Internet slang, abbreviations, trending phrases',  icon: '✦' },
+  { id: 'sarcastic',    label: 'Sarcastic',     desc: 'Witty comebacks with playful dry humor',           icon: '—' },
+  { id: 'sweet',        label: 'Sweet',         desc: 'Warm, affectionate responses',                     icon: '♥' },
+  { id: 'professional', label: 'Professional',  desc: 'Polished, business-appropriate replies',           icon: '◆' },
+  { id: 'decline',      label: 'Decline',       desc: 'Politely disagree or say no to plans',             icon: '✕' },
+  { id: 'quick',        label: 'Quick Reply',   desc: 'Ultra-short 2–5 word responses',                   icon: '⚡' },
+];
+
+// ══════════════════════════════════════════════
+// PASSWORD DETECTION
+// ══════════════════════════════════════════════
 const looksLikePassword = (text: string): boolean => {
   if (!text || text.length < 4) return false;
-  // Common password patterns: mixed case + digits + symbols, API keys, tokens
-  const hasUpperAndLower = /[a-z]/.test(text) && /[A-Z]/.test(text);
-  const hasDigits = /\d/.test(text);
-  const hasSymbols = /[!@#$%^&*()_+\-=\[\]{};':"|,.<>\/?\\]/.test(text);
-  const noSpaces = !/\s/.test(text);
-  const looksLikeToken = /^(sk-|api-|ghp_|gho_|AIza|Bearer |eyJ)/.test(text);
-
-  if (looksLikeToken) return true;
-  if (noSpaces && hasDigits && hasSymbols && text.length >= 8) return true;
-  if (noSpaces && hasUpperAndLower && hasDigits && text.length >= 10) return true;
+  const hasUL = /[a-z]/.test(text) && /[A-Z]/.test(text);
+  const hasD = /\d/.test(text);
+  const hasS = /[!@#$%^&*()_+\-=\[\]{};':"|,.<>\/?\\]/.test(text);
+  const noSp = !/\s/.test(text);
+  if (/^(sk-|api-|ghp_|gho_|AIza|Bearer |eyJ)/.test(text)) return true;
+  if (noSp && hasD && hasS && text.length >= 8) return true;
+  if (noSp && hasUL && hasD && text.length >= 10) return true;
   return false;
 };
 
+// ══════════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════════
 const App = () => {
-  // ============ STATE ============
+  // ── Navigation ──
+  const [activeTab, setActiveTab] = useState<'home' | 'tone' | 'system'>('home');
+
+  // ── Core State ──
   const [incognitoMode, setIncognitoMode] = useState(false);
-  const [listenerActive, setListenerActive] = useState(false); // OFF by default
+  const [listenerActive, setListenerActive] = useState(true);
   const [bubbleActive, setBubbleActive] = useState(false);
-  const [autoClearClipboard, setAutoClearClipboard] = useState(true);
-  const [lastCopiedText, setLastCopiedText] = useState('');
+  const [autoClear, setAutoClear] = useState(true);
+  const [lastCopied, setLastCopied] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [toastVisible, setToastVisible] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [blockedCount, setBlockedCount] = useState(0);
 
-  // Permission modal
-  const [showPermissionModal, setShowPermissionModal] = useState(true);
+  // ── Tone Selection ──
+  const [selectedTones, setSelectedTones] = useState<string[]>(['genz', 'sarcastic', 'sweet']);
 
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  // ── Toast ──
+  const [toastMsg, setToastMsg] = useState('');
   const toastAnim = useRef(new Animated.Value(0)).current;
+
+  // ── Animations ──
+  const spinAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0.3)).current;
+  const prevClip = useRef('');
 
-  const prevClipboardText = useRef('');
-
-  // ============ ANIMATIONS ============
+  // ── Radar spin + pulse + glow ──
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
+    Animated.loop(
+      Animated.timing(spinAnim, { toValue: 1, duration: 20000, easing: Easing.linear, useNativeDriver: true })
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.12, duration: 2000, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 0.8, duration: 1800, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0.2, duration: 1800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
+  // ── Toast ──
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    Animated.sequence([
+      Animated.timing(toastAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+      Animated.delay(2200),
+      Animated.timing(toastAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
     ]).start();
   }, []);
 
-  // Pulse animation for the status indicator
+  // ── Clipboard Listener ──
   useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.3, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      ])
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, []);
-
-  // ============ TOAST NOTIFICATION ============
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setToastVisible(true);
-    Animated.sequence([
-      Animated.timing(toastAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.delay(2000),
-      Animated.timing(toastAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start(() => setToastVisible(false));
-  };
-
-  // ============ CLIPBOARD LISTENER ============
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
-    if (listenerActive && !incognitoMode) {
-      interval = setInterval(async () => {
-        try {
-          const text = await Clipboard.getString();
-
-          if (text && text !== prevClipboardText.current) {
-            prevClipboardText.current = text;
-
-            // AppSec: Block password-like text
-            if (looksLikePassword(text)) {
-              setBlockedCount(prev => prev + 1);
-              showToast('🔒 Sensitive text detected & blocked');
-              return;
-            }
-
-            setLastCopiedText(text);
-            showToast('📋 New text captured');
+    if (!listenerActive || incognitoMode) return;
+    const iv = setInterval(async () => {
+      try {
+        const t = await Clipboard.getString();
+        if (t && t !== prevClip.current) {
+          prevClip.current = t;
+          if (looksLikePassword(t)) {
+            setBlockedCount(p => p + 1);
+            showToast('Sensitive text blocked');
+            return;
           }
-        } catch (error) {
-          console.error('Failed to read clipboard', error);
+          setLastCopied(t);
         }
-      }, 1500);
-    }
-
-    return () => { if (interval) clearInterval(interval); };
+      } catch (_) {}
+    }, 1500);
+    return () => clearInterval(iv);
   }, [listenerActive, incognitoMode]);
 
-  // ============ GENERATE REPLIES ============
-  const generateReplies = async (message: string) => {
-    if (!message) return;
-
+  // ── Generate ──
+  const generateReplies = async () => {
+    if (!lastCopied || isGenerating) return;
     setIsGenerating(true);
     setSuggestions([]);
-
     try {
-      const response = await fetch(`${API_URL}/api/suggest`, {
+      const res = await fetch(`${API_URL}/api/suggest`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
-        body: JSON.stringify({
-          message,
-          userId: 'mobile-app-user',
-          userTier: 'free',
-        }),
+        headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+        body: JSON.stringify({ message: lastCopied }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Request failed');
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Request failed');
-      setSuggestions(data.suggestions);
-
-    } catch (err: any) {
-      Alert.alert('Error', err.message);
+      // Filter suggestions to only show selected tones
+      const filtered = data.suggestions.filter((s: any) => selectedTones.includes(s.tone));
+      setSuggestions(filtered.length > 0 ? filtered : data.suggestions);
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // ============ COPY & AUTO-CLEAR ============
-  const copyToClipboard = (text: string) => {
+  // ── Copy ──
+  const copyReply = (text: string) => {
     Clipboard.setString(text);
-    showToast('✅ Copied! Paste it in your chat');
-
-    // AppSec: Auto-clear clipboard after 10 seconds
-    if (autoClearClipboard) {
-      setTimeout(() => {
-        Clipboard.setString('');
-        prevClipboardText.current = '';
-      }, 10000);
+    showToast('Copied to clipboard');
+    if (autoClear) {
+      setTimeout(() => { Clipboard.setString(''); prevClip.current = ''; }, 10000);
     }
   };
 
-  // ============ PERMISSION PROMPT ============
-  const handlePermissionGrant = () => {
-    setShowPermissionModal(false);
-    setListenerActive(true);
-    showToast('✅ Clipboard access enabled');
-  };
-
-  const handlePermissionDeny = () => {
-    setShowPermissionModal(false);
-    setListenerActive(false);
-    showToast('🔒 Running in manual mode');
-  };
-
-  // ============ FLOATING BUBBLE TOGGLE ============
-  const toggleFloatingBubble = async (value: boolean) => {
-    if (value) {
+  // ── Bubble ──
+  const toggleBubble = async (v: boolean) => {
+    if (v) {
       try {
-        const hasPermission = await FloatingBubbleModule.checkOverlayPermission();
-        if (!hasPermission) {
-          Alert.alert(
-            'Overlay Permission Required',
-            'To show the floating bubble over WhatsApp or other apps, you must allow "Draw over other apps".',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Settings', onPress: () => FloatingBubbleModule.requestOverlayPermission() }
-            ]
-          );
-          setBubbleActive(false);
+        const ok = await FloatingBubbleModule.checkOverlayPermission();
+        if (!ok) {
+          Alert.alert('Permission Required', 'Enable "Draw over other apps" to use the Floating Bubble.', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Enable', onPress: () => FloatingBubbleModule.requestOverlayPermission() },
+          ]);
           return;
         }
-        
         await FloatingBubbleModule.startService();
         setBubbleActive(true);
-        showToast('🫧 Floating Bubble started (App can be closed now)');
-      } catch (e) {
-        showToast('❌ Failed to start bubble service');
-        setBubbleActive(false);
-      }
+      } catch (_) { setBubbleActive(false); }
     } else {
       FloatingBubbleModule.stopService();
       setBubbleActive(false);
-      showToast('🫧 Floating Bubble stopped');
     }
   };
 
-  // Ensure service stops if incognito mode is turned ON
   useEffect(() => {
-    if (incognitoMode && bubbleActive) {
-      toggleFloatingBubble(false);
-    }
+    if (incognitoMode && bubbleActive) toggleBubble(false);
   }, [incognitoMode]);
 
-  // ============ RENDER ============
+  // ── Tone Toggle ──
+  const toggleTone = (id: string) => {
+    setSelectedTones(prev => {
+      if (prev.includes(id)) return prev.filter(t => t !== id);
+      return [...prev, id];
+    });
+  };
+
+  // ═══════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a0a0f" />
+    <SafeAreaView style={s.root}>
+      <StatusBar barStyle="light-content" backgroundColor={C.bg} />
 
-      {/* ===== PERMISSION MODAL ===== */}
-      <Modal visible={showPermissionModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalEmoji}>🔐</Text>
-            <Text style={styles.modalTitle}>Clipboard Permission</Text>
-            <Text style={styles.modalBody}>
-              AI Keyboard Assistant needs to read your clipboard to detect copied messages and generate smart replies.
-            </Text>
+      {/* ── Toast ── */}
+      <Animated.View style={[s.toast, { opacity: toastAnim, transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }]} pointerEvents="none">
+        <Text style={s.toastText}>{toastMsg}</Text>
+      </Animated.View>
 
-            <View style={styles.modalPrivacyBox}>
-              <Text style={styles.modalPrivacyTitle}>🛡️ Our Privacy Promise</Text>
-              <Text style={styles.modalPrivacyText}>• We only read text YOU explicitly copy</Text>
-              <Text style={styles.modalPrivacyText}>• Passwords & API keys are auto-blocked</Text>
-              <Text style={styles.modalPrivacyText}>• Zero message storage — nothing is saved</Text>
-              <Text style={styles.modalPrivacyText}>• Incognito mode available anytime</Text>
-            </View>
+      {/* ── Header ── */}
+      <View style={s.header}>
+        <Text style={s.headerBolt}>⚡</Text>
+        <Text style={s.headerTitle}>AI KEYBOARD</Text>
+      </View>
 
-            <TouchableOpacity style={styles.modalButtonAllow} onPress={handlePermissionGrant}>
-              <Text style={styles.modalButtonText}>✅ Allow Clipboard Access</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalButtonDeny} onPress={handlePermissionDeny}>
-              <Text style={styles.modalButtonDenyText}>Use Manual Mode Instead</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* ── Content ── */}
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
-      {/* ===== TOAST ===== */}
-      {toastVisible && (
-        <Animated.View style={[styles.toast, { opacity: toastAnim }]}>
-          <Text style={styles.toastText}>{toastMessage}</Text>
-        </Animated.View>
-      )}
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-
-          {/* ===== HEADER ===== */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Text style={styles.logo}>⌨️</Text>
-              <Animated.View style={[styles.statusDot, {
-                backgroundColor: listenerActive && !incognitoMode ? '#10b981' : '#f43f5e',
-                transform: [{ scale: pulseAnim }]
-              }]} />
-            </View>
-            <Text style={styles.title}>AI Keyboard Assistant</Text>
-            <Text style={styles.subtitle}>
-              {incognitoMode ? '🕵️ Incognito Active' : listenerActive ? '🟢 Listening' : '⏸️ Paused'}
-            </Text>
-            <View style={styles.versionBadge}>
-              <Text style={styles.versionText}>v1.0 • Gemini Flash-Lite</Text>
-            </View>
-          </View>
-
-          {/* ===== SECURITY STATUS CARD ===== */}
-          <View style={styles.securityCard}>
-            <Text style={styles.securityTitle}>🛡️ Security Status</Text>
-            <View style={styles.securityRow}>
-              <View style={styles.securityItem}>
-                <Text style={styles.securityIcon}>🔒</Text>
-                <Text style={styles.securityLabel}>Blocked</Text>
-                <Text style={styles.securityValue}>{blockedCount}</Text>
+        {/* ═══════════ HOME TAB ═══════════ */}
+        {activeTab === 'home' && (
+          <>
+            {/* Radar */}
+            {incognitoMode ? (
+              <View style={s.radarWrap}>
+                <Text style={{ fontSize: 56 }}>🕵️</Text>
+                <Text style={[s.radarLabel, { color: C.red, marginTop: 20 }]}>INCOGNITO ACTIVE</Text>
+                <Text style={[s.radarSub, { color: C.redDim }]}>Clipboard monitoring strictly disabled</Text>
               </View>
-              <View style={styles.securityDivider} />
-              <View style={styles.securityItem}>
-                <Text style={styles.securityIcon}>{autoClearClipboard ? '✅' : '❌'}</Text>
-                <Text style={styles.securityLabel}>Auto-Clear</Text>
-                <Text style={styles.securityValue}>{autoClearClipboard ? 'ON' : 'OFF'}</Text>
-              </View>
-              <View style={styles.securityDivider} />
-              <View style={styles.securityItem}>
-                <Text style={styles.securityIcon}>{incognitoMode ? '🕵️' : '👁️'}</Text>
-                <Text style={styles.securityLabel}>Privacy</Text>
-                <Text style={styles.securityValue}>{incognitoMode ? 'MAX' : 'STD'}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* ===== SETTINGS CARD ===== */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>⚙️ Settings & Privacy</Text>
-
-            <View style={styles.settingRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingText}>Clipboard Listener</Text>
-                <Text style={styles.settingSubtext}>Detect copied text automatically</Text>
-              </View>
-              <Switch
-                value={listenerActive}
-                onValueChange={setListenerActive}
-                trackColor={{ false: '#333', true: '#6366f1' }}
-                thumbColor={listenerActive ? '#ffffff' : '#888'}
-              />
-            </View>
-
-            <View style={styles.settingRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingText}>🫧 Floating Bubble Service</Text>
-                <Text style={styles.settingSubtext}>Shows a chat head when text is copied (Works when app is closed!)</Text>
-              </View>
-              <Switch
-                value={bubbleActive}
-                onValueChange={toggleFloatingBubble}
-                disabled={incognitoMode}
-                trackColor={{ false: '#333', true: '#10b981' }}
-                thumbColor={bubbleActive ? '#ffffff' : '#888'}
-              />
-            </View>
-
-            <View style={styles.settingRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingText}>🕵️‍♂️ Incognito Mode</Text>
-                <Text style={styles.settingSubtext}>Pause all tracking for max privacy</Text>
-              </View>
-              <Switch
-                value={incognitoMode}
-                onValueChange={setIncognitoMode}
-                trackColor={{ false: '#333', true: '#f43f5e' }}
-                thumbColor={incognitoMode ? '#ffffff' : '#888'}
-              />
-            </View>
-
-            <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.settingText}>🧹 Auto-Clear Clipboard</Text>
-                <Text style={styles.settingSubtext}>Wipe clipboard 10s after copying a reply</Text>
-              </View>
-              <Switch
-                value={autoClearClipboard}
-                onValueChange={setAutoClearClipboard}
-                trackColor={{ false: '#333', true: '#10b981' }}
-                thumbColor={autoClearClipboard ? '#ffffff' : '#888'}
-              />
-            </View>
-          </View>
-
-          {/* ===== INTERACTION AREA ===== */}
-          {incognitoMode ? (
-            <View style={styles.incognitoBanner}>
-              <Text style={styles.incognitoEmoji}>🕵️</Text>
-              <Text style={styles.incognitoTitle}>Incognito Mode Active</Text>
-              <Text style={styles.incognitoSubtext}>
-                Clipboard monitoring is completely disabled.{'\n'}
-                We are NOT reading any of your messages.
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>📩 Last Copied Message</Text>
-              <View style={styles.messageBox}>
-                <Text style={styles.messageText}>
-                  {lastCopiedText || 'Copy a message from WhatsApp or any app to see it here...'}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.button, (!lastCopiedText || isGenerating) && styles.buttonDisabled]}
-                disabled={!lastCopiedText || isGenerating}
-                onPress={() => generateReplies(lastCopiedText)}
-                activeOpacity={0.7}
-              >
-                {isGenerating ? (
-                  <View style={styles.loadingRow}>
-                    <ActivityIndicator color="#ffffff" size="small" />
-                    <Text style={styles.buttonText}>  Generating...</Text>
+            ) : (
+              <View style={s.radarWrap}>
+                <View style={s.radarBox}>
+                  <Animated.View style={[s.radarDash, { transform: [{ rotate: spin }] }]} />
+                  {/* Glow ring */}
+                  <Animated.View style={[s.radarGlow, { opacity: glowAnim }]} />
+                  <View style={s.radarOuter}>
+                    <Animated.View style={[s.radarCore, { transform: [{ scale: pulseAnim }] }]}>
+                      <Text style={{ fontSize: 34 }}>🛡️</Text>
+                    </Animated.View>
                   </View>
-                ) : (
-                  <Text style={styles.buttonText}>⚡ Generate Smart Replies</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+                </View>
+                <Text style={s.radarLabel}>ACTIVELY MONITORING</Text>
+                <Text style={s.radarSub}>AES-256 Local Encryption Active</Text>
+              </View>
+            )}
 
-          {/* ===== SUGGESTIONS ===== */}
-          {suggestions.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>💬 Smart Replies</Text>
-              {suggestions.map((s, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={styles.suggestionItem}
-                  onPress={() => copyToClipboard(s.text)}
-                  activeOpacity={0.6}
-                >
-                  <View style={styles.suggestionHeader}>
-                    <Text style={styles.suggestionLabel}>
-                      {s.tone === 'casual' && '😊 '}
-                      {s.tone === 'professional' && '💼 '}
-                      {s.tone === 'brief' && '⚡ '}
-                      {s.tone === 'quick' && '💬 '}
-                      {s.label}
+            {/* Stats Row */}
+            <View style={s.statsRow}>
+              <View style={s.statCard}>
+                <Text style={s.statCaption}>BLOCKED</Text>
+                <Text style={s.statValue}>{blockedCount}</Text>
+              </View>
+              <View style={s.statCard}>
+                <Text style={s.statCaption}>AUTO-CLEAR</Text>
+                <Text style={[s.statValue, { color: C.primary }]}>{autoClear ? 'ON' : 'OFF'}</Text>
+              </View>
+              <View style={s.statCard}>
+                <Text style={s.statCaption}>PRIVACY</Text>
+                <Text style={s.statValue}>{incognitoMode ? 'MAX' : 'STD'}</Text>
+              </View>
+            </View>
+
+            {/* Capture Feed */}
+            {!incognitoMode && (
+              <>
+                <View style={s.sectionHead}>
+                  <Text style={s.sectionTitle}>Capture Feed</Text>
+                  <Text style={s.sectionTag}>REAL-TIME SYNC</Text>
+                </View>
+                <View style={s.feedCard}>
+                  <View style={s.feedIconBox}><Text style={{ fontSize: 16 }}>💬</Text></View>
+                  <View style={{ flex: 1, paddingRight: 24 }}>
+                    <Text style={s.feedLabel}>LAST COPIED MESSAGE</Text>
+                    <Text style={s.feedText}>
+                      {lastCopied ? `"${lastCopied}"` : 'Copy a message from WhatsApp or any app...'}
                     </Text>
-                    <Text style={styles.copyHint}>Tap to copy</Text>
                   </View>
-                  <Text style={styles.suggestionText}>{s.text}</Text>
+                  {lastCopied ? (
+                    <TouchableOpacity style={s.feedCopyBtn} onPress={() => copyReply(lastCopied)}>
+                      <Text style={{ fontSize: 14 }}>📋</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                {/* Generate Button */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={[s.generateBtn, (!lastCopied || isGenerating) && { opacity: 0.5 }]}
+                  disabled={!lastCopied || isGenerating}
+                  onPress={generateReplies}
+                >
+                  {isGenerating ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <View style={s.generateInner}>
+                      <SparkleIcon />
+                      <Text style={s.generateText}>GENERATE SMART REPLIES</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
-              ))}
+
+                {/* Suggestions */}
+                {suggestions.length > 0 && (
+                  <>
+                    <Text style={[s.sectionTitle, { marginBottom: 14 }]}>Generated Replies</Text>
+                    {suggestions.map((sg, i) => (
+                      <TouchableOpacity key={i} style={s.replyCard} activeOpacity={0.7} onPress={() => copyReply(sg.text)}>
+                        <View style={s.replyHeader}>
+                          <Text style={s.replyTag}>{sg.label?.toUpperCase()}</Text>
+                          <Text style={s.replyHint}>TAP TO COPY</Text>
+                        </View>
+                        <Text style={s.replyText}>{sg.text}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {/* ═══════════ TONES TAB ═══════════ */}
+        {activeTab === 'tone' && (
+          <>
+            <View style={s.sectionHead}>
+              <View>
+                <Text style={s.pageTitle}>Tone Configuration</Text>
+                <Text style={s.pageSub}>Select any number of tones to display on your Floating Bubble</Text>
+              </View>
             </View>
-          )}
 
-          {/* ===== FOOTER ===== */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Built with 💜 by Aryan Kumar</Text>
-            <Text style={styles.footerSubtext}>Privacy-first • Zero storage • Open source</Text>
-          </View>
+            {ALL_TONES.map(tone => {
+              const active = selectedTones.includes(tone.id);
+              return (
+                <TouchableOpacity
+                  key={tone.id}
+                  style={[s.toneCard, active && s.toneCardActive]}
+                  activeOpacity={0.8}
+                  onPress={() => toggleTone(tone.id)}
+                >
+                  <View style={[s.toneIconBox, active && { backgroundColor: 'rgba(99,102,241,0.2)' }]}>
+                    <Text style={[s.toneIcon, active && { color: C.primary }]}>{tone.icon}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.toneLabel}>{tone.label}</Text>
+                    <Text style={s.toneDesc}>{tone.desc}</Text>
+                  </View>
+                  <View style={[s.toneToggle, active && s.toneToggleActive]}>
+                    <View style={[s.toneToggleDot, active && s.toneToggleDotActive]} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
 
-        </Animated.View>
+            <TouchableOpacity style={s.saveBtn} activeOpacity={0.85} onPress={() => showToast('Preferences saved')}>
+              <Text style={s.saveBtnText}>SAVE PREFERENCES</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* ═══════════ SYSTEM TAB ═══════════ */}
+        {activeTab === 'system' && (
+          <>
+            <Text style={s.pageTitle}>System Settings</Text>
+            <Text style={[s.pageSub, { marginBottom: 20 }]}>Manage core AI engine behavior and privacy controls.</Text>
+
+            <Text style={s.groupLabel}>SYSTEM CONTROLS</Text>
+            <View style={s.groupCard}>
+              <ToggleRow icon={<ClipboardIcon color={C.onSurfaceVar} />} label="Clipboard Monitor" sub="Detect copied text automatically" value={listenerActive} onChange={setListenerActive} color={C.primary} />
+              <View style={s.divider} />
+              <ToggleRow icon={<PipIcon color={C.onSurfaceVar} />} label="Floating Bubble Service" sub="Overlay quick access on all apps" value={bubbleActive} onChange={toggleBubble} color={C.primary} />
+              <View style={s.divider} />
+              <ToggleRow icon="🕵️" label="Incognito Mode" sub="Hardware-level privacy switch" value={incognitoMode} onChange={setIncognitoMode} color={C.red} />
+            </View>
+
+            <Text style={s.groupLabel}>SECURITY</Text>
+            <View style={s.groupCard}>
+              <ToggleRow icon="🧹" label="Auto-Clear Memory" sub="Wipes data 10s after pasting" value={autoClear} onChange={setAutoClear} color={C.green} />
+            </View>
+
+            <Text style={s.groupLabel}>ABOUT</Text>
+            <View style={s.groupCard}>
+              <View style={s.aboutRow}>
+                <View>
+                  <Text style={s.aboutName}>Replyfy</Text>
+                  <Text style={s.aboutVer}>v1.1.0 Beta</Text>
+                </View>
+                <View style={s.aboutBadge}>
+                  <Text style={s.aboutBadgeText}>GEMINI 2.5 FLASH-LITE</Text>
+                </View>
+              </View>
+              <View style={s.divider} />
+              <View style={s.aboutRow}>
+                <View>
+                  <Text style={s.aboutCaption}>ENGINE ARCHITECT</Text>
+                  <Text style={s.aboutCredit}>Built with love by Aryan Kumar</Text>
+                </View>
+              </View>
+              <View style={s.divider} />
+              <View style={s.aboutStatsRow}>
+                <View style={s.aboutStatBox}>
+                  <Text style={s.aboutStatCaption}>LATENCY</Text>
+                  <Text style={s.aboutStatVal}>14ms</Text>
+                </View>
+                <View style={s.aboutStatBox}>
+                  <Text style={s.aboutStatCaption}>STATUS</Text>
+                  <Text style={[s.aboutStatVal, { color: C.green }]}>Encrypted</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+
+        <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* ── Bottom Nav ── */}
+      <View style={s.nav}>
+        <NavTab id="home" label="HOME" active={activeTab} onPress={setActiveTab} icon={HomeIcon} />
+        <NavTab id="tone" label="TONE" active={activeTab} onPress={setActiveTab} icon={PaletteIcon} />
+        <NavTab id="system" label="SETTINGS" active={activeTab} onPress={setActiveTab} icon={GearIcon} />
+      </View>
     </SafeAreaView>
   );
 };
 
-// ============ STYLES ============
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  scrollContent: { padding: 20, paddingBottom: 40 },
+// ══════════════════════════════════════════════
+// SUB-COMPONENTS
+// ══════════════════════════════════════════════
 
-  // Header
-  header: { alignItems: 'center', marginBottom: 24, marginTop: 10 },
-  logoContainer: { position: 'relative', marginBottom: 12 },
-  logo: { fontSize: 56 },
-  statusDot: { position: 'absolute', bottom: 2, right: -4, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#0a0a0f' },
-  title: { fontSize: 26, fontWeight: '800', color: '#e0e0e0', textAlign: 'center', letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, color: '#888', marginTop: 6 },
-  versionBadge: { marginTop: 8, backgroundColor: '#6366f120', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#6366f140' },
-  versionText: { color: '#6366f1', fontSize: 11, fontWeight: '600' },
+const ToggleRow = ({ icon, label, sub, value, onChange, color }: any) => (
+  <View style={s.toggleRow}>
+    <View style={s.toggleIcon}>
+      {typeof icon === 'string' ? <Text style={{ fontSize: 16 }}>{icon}</Text> : icon}
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={s.toggleLabel}>{label}</Text>
+      <Text style={s.toggleSub}>{sub}</Text>
+    </View>
+    <Switch
+      value={value}
+      onValueChange={onChange}
+      trackColor={{ false: C.outlineVar, true: color }}
+      thumbColor="#fff"
+    />
+  </View>
+);
 
-  // Security Card
-  securityCard: { backgroundColor: '#111118', borderRadius: 16, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: '#10b98130' },
-  securityTitle: { fontSize: 12, fontWeight: '700', color: '#10b981', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, textAlign: 'center' },
-  securityRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
-  securityItem: { alignItems: 'center', flex: 1 },
-  securityIcon: { fontSize: 24, marginBottom: 4 },
-  securityLabel: { fontSize: 11, color: '#888', marginBottom: 2 },
-  securityValue: { fontSize: 16, color: '#e0e0e0', fontWeight: '700' },
-  securityDivider: { width: 1, height: 40, backgroundColor: '#2a2a35' },
+// ── Sparkle Icon for Generate Button ──
+const SparkleIcon = () => (
+  <View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+    {/* Large star */}
+    <View style={{ position: 'absolute', width: 3, height: 14, backgroundColor: '#fff', borderRadius: 1.5 }} />
+    <View style={{ position: 'absolute', width: 14, height: 3, backgroundColor: '#fff', borderRadius: 1.5 }} />
+    <View style={{ position: 'absolute', width: 3, height: 10, backgroundColor: '#fff', borderRadius: 1.5, transform: [{ rotate: '45deg' }] }} />
+    <View style={{ position: 'absolute', width: 10, height: 3, backgroundColor: '#fff', borderRadius: 1.5, transform: [{ rotate: '45deg' }] }} />
+    {/* Small sparkle top-right */}
+    <View style={{ position: 'absolute', top: 0, right: 0, width: 1.5, height: 6, backgroundColor: '#fff', borderRadius: 1 }} />
+    <View style={{ position: 'absolute', top: 2, right: -2, width: 6, height: 1.5, backgroundColor: '#fff', borderRadius: 1 }} />
+  </View>
+);
 
-  // Cards
-  card: { backgroundColor: '#1a1a24', borderRadius: 16, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#2a2a35' },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: '#6366f1', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 15 },
+// ── Custom Nav Icons ──
+const HomeIcon = ({ color }: { color: string }) => (
+  <View style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'flex-end' }}>
+    <View style={{ position: 'absolute', top: 0, width: 0, height: 0, borderLeftWidth: 11, borderRightWidth: 11, borderBottomWidth: 9, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: color }} />
+    <View style={{ width: 16, height: 11, borderWidth: 2, borderColor: color, borderTopWidth: 0, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}>
+      <View style={{ position: 'absolute', bottom: 0, alignSelf: 'center', width: 5, height: 6, backgroundColor: color, borderTopLeftRadius: 2, borderTopRightRadius: 2 }} />
+    </View>
+  </View>
+);
 
-  // Settings
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a35' },
-  settingText: { fontSize: 16, color: '#e0e0e0', fontWeight: '500' },
-  settingSubtext: { fontSize: 12, color: '#888', marginTop: 3, maxWidth: width * 0.6 },
+// ── Color Palette Icon (for Tone nav tab) ──
+const PaletteIcon = ({ color }: { color: string }) => (
+  <View style={{ width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
+    {/* Outer palette shape — rounded oval */}
+    <View style={{ width: 22, height: 20, borderRadius: 10, borderWidth: 2, borderColor: color, justifyContent: 'center', alignItems: 'center' }} />
+    {/* Palette hole (thumb cutout) */}
+    <View style={{ position: 'absolute', bottom: 2, right: 2, width: 5, height: 5, borderRadius: 2.5, borderWidth: 1.5, borderColor: color, backgroundColor: 'transparent' }} />
+    {/* Color dots representing paint wells */}
+    <View style={{ position: 'absolute', top: 4, left: 5, width: 3.5, height: 3.5, borderRadius: 2, backgroundColor: color }} />
+    <View style={{ position: 'absolute', top: 3.5, right: 5.5, width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.7 }} />
+    <View style={{ position: 'absolute', bottom: 5.5, left: 4, width: 3, height: 3, borderRadius: 1.5, backgroundColor: color, opacity: 0.5 }} />
+  </View>
+);
 
-  // Incognito
-  incognitoBanner: { backgroundColor: '#f43f5e10', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: '#f43f5e30', marginBottom: 20, alignItems: 'center' },
-  incognitoEmoji: { fontSize: 40, marginBottom: 10 },
-  incognitoTitle: { color: '#f43f5e', fontWeight: '700', fontSize: 18, marginBottom: 8 },
-  incognitoSubtext: { color: '#f43f5e90', textAlign: 'center', lineHeight: 20 },
+// ── PiP (Picture-in-Picture) Icon for Floating Bubble ──
+const PipIcon = ({ color }: { color: string }) => (
+  <View style={{ width: 20, height: 16, justifyContent: 'center', alignItems: 'center' }}>
+    {/* Outer screen / window */}
+    <View style={{ width: 20, height: 14, borderRadius: 2, borderWidth: 1.8, borderColor: color }} />
+    {/* Inner PiP mini-window (bottom-right) */}
+    <View style={{ position: 'absolute', bottom: 2.5, right: 2, width: 8, height: 6, borderRadius: 1.5, backgroundColor: color }} />
+  </View>
+);
 
-  // Message Box
-  messageBox: { backgroundColor: '#0a0a0f', padding: 16, borderRadius: 12, minHeight: 80, marginBottom: 16, borderWidth: 1, borderColor: '#2a2a35' },
-  messageText: { color: '#d0d0d0', fontSize: 15, lineHeight: 22 },
+// ── Minimalist Clipboard Icon for Clipboard Monitor ──
+const ClipboardIcon = ({ color }: { color: string }) => (
+  <View style={{ width: 16, height: 20, justifyContent: 'center', alignItems: 'center' }}>
+    {/* Board body */}
+    <View style={{ width: 16, height: 18, borderRadius: 2.5, borderWidth: 1.8, borderColor: color, marginTop: 2 }} />
+    {/* Clip at top */}
+    <View style={{ position: 'absolute', top: 0, width: 8, height: 4, borderRadius: 1.5, borderWidth: 1.5, borderColor: color, backgroundColor: 'transparent' }} />
+    {/* Lines on clipboard */}
+    <View style={{ position: 'absolute', top: 9, left: 4, width: 8, height: 1.4, backgroundColor: color, borderRadius: 1, opacity: 0.6 }} />
+    <View style={{ position: 'absolute', top: 12.5, left: 4, width: 6, height: 1.4, backgroundColor: color, borderRadius: 1, opacity: 0.4 }} />
+  </View>
+);
 
-  // Buttons
-  button: { backgroundColor: '#6366f1', padding: 16, borderRadius: 12, alignItems: 'center', shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
-  buttonDisabled: { backgroundColor: '#333340', shadowOpacity: 0, elevation: 0 },
-  buttonText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  loadingRow: { flexDirection: 'row', alignItems: 'center' },
+const GearIcon = ({ color }: { color: string }) => (
+  <View style={{ width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: color }} />
+    <View style={{ position: 'absolute', width: 4, height: 4, borderRadius: 2, backgroundColor: color }} />
+    <View style={{ position: 'absolute', top: 0, width: 2.5, height: 5, backgroundColor: color, borderRadius: 1 }} />
+    <View style={{ position: 'absolute', bottom: 0, width: 2.5, height: 5, backgroundColor: color, borderRadius: 1 }} />
+    <View style={{ position: 'absolute', left: 0, width: 5, height: 2.5, backgroundColor: color, borderRadius: 1 }} />
+    <View style={{ position: 'absolute', right: 0, width: 5, height: 2.5, backgroundColor: color, borderRadius: 1 }} />
+  </View>
+);
 
-  // Suggestions
-  suggestionItem: { backgroundColor: '#22222e', padding: 16, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#2a2a35' },
-  suggestionHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  suggestionLabel: { color: '#10b981', fontWeight: '700', fontSize: 12, textTransform: 'uppercase' },
-  copyHint: { color: '#666', fontSize: 11 },
-  suggestionText: { color: '#e0e0e0', fontSize: 15, lineHeight: 22 },
+const NavTab = ({ id, label, icon: IconComp, active, onPress }: any) => {
+  const isActive = active === id;
+  const iconColor = isActive ? C.primary : C.outline;
+  return (
+    <TouchableOpacity style={s.navTab} activeOpacity={0.7} onPress={() => onPress(id)}>
+      <View style={[s.navIconWrap, isActive && s.navIconWrapActive]}>
+        <IconComp color={iconColor} />
+      </View>
+      <Text style={[s.navLabel, isActive && { color: C.primary, opacity: 1 }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
+
+// ══════════════════════════════════════════════
+// STYLES
+// ══════════════════════════════════════════════
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.bg },
 
   // Toast
-  toast: { position: 'absolute', top: 50, left: 20, right: 20, backgroundColor: '#1a1a24', padding: 14, borderRadius: 12, zIndex: 999, borderWidth: 1, borderColor: '#6366f140', alignItems: 'center' },
-  toastText: { color: '#e0e0e0', fontWeight: '600', fontSize: 14 },
+  toast: { position: 'absolute', top: 48, left: 24, right: 24, zIndex: 999, backgroundColor: C.surfaceHighest, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 20, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(99,102,241,0.15)' },
+  toastText: { color: C.onSurface, fontSize: 13, fontWeight: '600', letterSpacing: 0.3 },
 
-  // Modal
-  modalOverlay: { flex: 1, backgroundColor: '#000000cc', justifyContent: 'center', padding: 24 },
-  modalCard: { backgroundColor: '#1a1a24', borderRadius: 20, padding: 28, alignItems: 'center', borderWidth: 1, borderColor: '#2a2a35' },
-  modalEmoji: { fontSize: 48, marginBottom: 16 },
-  modalTitle: { fontSize: 22, fontWeight: '800', color: '#e0e0e0', marginBottom: 12 },
-  modalBody: { fontSize: 15, color: '#aaa', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
-  modalPrivacyBox: { backgroundColor: '#10b98110', borderRadius: 12, padding: 16, width: '100%', marginBottom: 24, borderWidth: 1, borderColor: '#10b98130' },
-  modalPrivacyTitle: { color: '#10b981', fontWeight: '700', fontSize: 14, marginBottom: 10 },
-  modalPrivacyText: { color: '#10b981', fontSize: 13, lineHeight: 22 },
-  modalButtonAllow: { backgroundColor: '#6366f1', padding: 16, borderRadius: 12, width: '100%', alignItems: 'center', marginBottom: 10 },
-  modalButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  modalButtonDeny: { padding: 12, width: '100%', alignItems: 'center' },
-  modalButtonDenyText: { color: '#888', fontSize: 14 },
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: C.white10 },
+  headerBolt: { fontSize: 18, marginRight: 10 },
+  headerTitle: { color: C.onSurface, fontSize: 15, fontWeight: '800', letterSpacing: 2 },
 
-  // Footer
-  footer: { alignItems: 'center', marginTop: 10, paddingVertical: 20 },
-  footerText: { color: '#555', fontSize: 13 },
-  footerSubtext: { color: '#333', fontSize: 11, marginTop: 4 },
+  scroll: { paddingHorizontal: 24, paddingTop: 28 },
+
+  // Radar
+  radarWrap: { alignItems: 'center', marginBottom: 36, marginTop: 8 },
+  radarBox: { width: 180, height: 180, justifyContent: 'center', alignItems: 'center' },
+  radarDash: { position: 'absolute', width: 180, height: 180, borderRadius: 90, borderWidth: 2, borderColor: 'rgba(99,102,241,0.25)', borderStyle: 'dashed' },
+  radarGlow: { position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(99,102,241,0.12)', borderWidth: 2, borderColor: 'rgba(99,102,241,0.08)' },
+  radarOuter: { width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(99,102,241,0.08)', borderWidth: 1, borderColor: 'rgba(99,102,241,0.18)', justifyContent: 'center', alignItems: 'center' },
+  radarCore: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(99,102,241,0.18)', justifyContent: 'center', alignItems: 'center' },
+  radarLabel: { color: C.primaryDim, fontSize: 11, fontWeight: '800', letterSpacing: 2.5, marginTop: 28 },
+  radarSub: { color: C.onSurfaceVar, fontSize: 12, marginTop: 4 },
+
+  // Stats
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 36 },
+  statCard: { flex: 1, backgroundColor: C.surface, paddingVertical: 18, borderRadius: 20, alignItems: 'center', borderWidth: 1, borderColor: C.white10 },
+  statCaption: { color: C.onSurfaceVar, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 6 },
+  statValue: { color: C.onSurface, fontSize: 20, fontWeight: '800' },
+
+  // Section
+  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  sectionTitle: { color: C.onSurface, fontSize: 15, fontWeight: '600' },
+  sectionTag: { color: C.white40, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginTop: 3 },
+
+  // Feed
+  feedCard: { backgroundColor: C.surface, borderRadius: 20, padding: 20, flexDirection: 'row', alignItems: 'flex-start', borderWidth: 1, borderColor: C.white10, marginBottom: 28, position: 'relative' },
+  feedIconBox: { backgroundColor: C.white10, width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  feedLabel: { color: C.onSurfaceVar, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
+  feedText: { color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
+  feedCopyBtn: { position: 'absolute', top: 16, right: 16 },
+
+  // Generate
+  generateBtn: { borderRadius: 999, paddingVertical: 18, alignItems: 'center', marginBottom: 36, overflow: 'hidden', backgroundColor: C.primaryDim, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.45, shadowRadius: 24, elevation: 10 },
+  generateInner: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  generateText: { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 2 },
+
+  // Reply Cards
+  replyCard: { backgroundColor: C.surface, borderRadius: 20, padding: 20, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(99,102,241,0.15)' },
+  replyHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  replyTag: { color: C.primary, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  replyHint: { color: C.outline, fontSize: 9, fontWeight: '700', letterSpacing: 1 },
+  replyText: { color: C.onSurface, fontSize: 15, lineHeight: 23 },
+
+  // Page Titles
+  pageTitle: { color: C.onSurface, fontSize: 24, fontWeight: '800', marginBottom: 6 },
+  pageSub: { color: C.onSurfaceVar, fontSize: 13, lineHeight: 20, marginBottom: 8 },
+
+  // Tone Cards
+  toneBadge: { backgroundColor: C.surfaceHighest, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: C.white10 },
+  toneBadgeText: { color: C.onSurface, fontSize: 16, fontWeight: '800' },
+  toneBadgeSub: { color: C.onSurfaceVar, fontSize: 9, fontWeight: '700', letterSpacing: 1.2, marginTop: 2 },
+
+  toneCard: { backgroundColor: C.surface, borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: 'transparent' },
+  toneCardActive: { borderColor: 'rgba(99,102,241,0.35)', backgroundColor: C.surfaceHigh },
+
+  toneIconBox: { width: 42, height: 42, borderRadius: 14, backgroundColor: C.white10, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  toneIcon: { color: C.onSurfaceVar, fontSize: 18, fontWeight: '700' },
+  toneLabel: { color: C.onSurface, fontSize: 15, fontWeight: '700', marginBottom: 3 },
+  toneDesc: { color: C.onSurfaceVar, fontSize: 12, lineHeight: 17 },
+
+  toneToggle: { width: 44, height: 24, borderRadius: 12, backgroundColor: C.outlineVar, justifyContent: 'center', paddingHorizontal: 3 },
+  toneToggleActive: { backgroundColor: C.primaryDim },
+  toneToggleDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#888' },
+  toneToggleDotActive: { backgroundColor: '#fff', alignSelf: 'flex-end' },
+
+  saveBtn: { backgroundColor: C.primaryDim, borderRadius: 999, paddingVertical: 18, alignItems: 'center', marginTop: 8, shadowColor: C.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 6 },
+  saveBtnText: { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 2 },
+
+  // System
+  groupLabel: { color: C.primaryDim, fontSize: 11, fontWeight: '800', letterSpacing: 1.8, marginBottom: 10, marginTop: 8 },
+  groupCard: { backgroundColor: C.surface, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 6, marginBottom: 24, borderWidth: 1, borderColor: C.white10 },
+  divider: { height: 1, backgroundColor: C.white10, marginVertical: 2 },
+
+  toggleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
+  toggleIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: C.white10, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  toggleLabel: { color: C.onSurface, fontSize: 14, fontWeight: '600' },
+  toggleSub: { color: C.onSurfaceVar, fontSize: 11, marginTop: 3, paddingRight: 16 },
+
+  // About
+  aboutRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16 },
+  aboutName: { color: C.onSurface, fontSize: 20, fontWeight: '800' },
+  aboutVer: { color: C.onSurfaceVar, fontSize: 12, marginTop: 2 },
+  aboutBadge: { backgroundColor: C.surfaceHighest, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: C.white10 },
+  aboutBadgeText: { color: C.primary, fontSize: 10, fontWeight: '800', letterSpacing: 1 },
+  aboutCaption: { color: C.onSurfaceVar, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, marginBottom: 4 },
+  aboutCredit: { color: C.onSurface, fontSize: 13 },
+  aboutStatsRow: { flexDirection: 'row', gap: 12, paddingVertical: 16 },
+  aboutStatBox: { flex: 1, backgroundColor: C.surfaceLow, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.white10 },
+  aboutStatCaption: { color: C.onSurfaceVar, fontSize: 9, fontWeight: '700', letterSpacing: 1.5, marginBottom: 6 },
+  aboutStatVal: { color: C.onSurface, fontSize: 18, fontWeight: '800' },
+
+  // Nav
+  nav: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 82, backgroundColor: C.surfaceLow, borderTopWidth: 1, borderTopColor: C.white10, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', paddingTop: 12 },
+  navTab: { alignItems: 'center', flex: 1 },
+  navIconWrap: { width: 44, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  navIconWrapActive: { backgroundColor: 'rgba(99,102,241,0.15)' },
+  navLabel: { color: C.outline, fontSize: 9, fontWeight: '800', letterSpacing: 1.2, marginTop: 5, opacity: 0.4 },
 });
 
 export default App;
