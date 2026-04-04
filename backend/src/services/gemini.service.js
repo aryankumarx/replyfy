@@ -28,10 +28,10 @@ class GeminiService {
     }
 
     this.apiKey = process.env.GEMINI_API_KEY;
-    // gemini-2.5-flash-lite has the highest free tier quota (~30-60 RPM)
-    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${this.apiKey}`;
+    // gemini-1.5-flash-8b is the fastest production model for short responses
+    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${this.apiKey}`;
     this._initialized = true;
-    console.log('✅ Gemini service initialized (model: gemini-2.5-flash-lite)');
+    console.log('✅ Gemini service initialized (model: gemini-1.5-flash-8b)');
   }
 
   detectLanguage(text) {
@@ -111,24 +111,33 @@ class GeminiService {
    * Fetch with retry + exponential backoff for 429 errors
    */
   async _fetchWithRetry(url, options, retries = 3, baseDelay = 2000) {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 60000); 
+
     for (let attempt = 0; attempt <= retries; attempt++) {
-      const response = await fetch(url, options);
-      
-      if (response.status === 429 && attempt < retries) {
-        // Extract retry delay from response if available
-        const data = await response.json().catch(() => ({}));
-        const retryInfo = data.error?.details?.find(d => d.retryDelay);
-        const serverDelay = retryInfo?.retryDelay 
-          ? parseFloat(retryInfo.retryDelay) * 1000 
-          : null;
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
         
-        const waitTime = serverDelay || (baseDelay * Math.pow(2, attempt));
-        console.log(`⚠️ Rate limited (429). Retry ${attempt + 1}/${retries} in ${(waitTime/1000).toFixed(1)}s...`);
-        await new Promise(res => setTimeout(res, waitTime));
-        continue;
+        if (response.status === 429 && attempt < retries) {
+          const data = await response.json().catch(() => ({}));
+          const retryInfo = data.error?.details?.find(d => d.retryDelay);
+          const serverDelay = retryInfo?.retryDelay 
+            ? parseFloat(retryInfo.retryDelay) * 1000 
+            : null;
+          
+          const waitTime = serverDelay || (baseDelay * Math.pow(2, attempt));
+          await new Promise(res => setTimeout(res, waitTime));
+          continue;
+        }
+        clearTimeout(tid);
+        return response;
+      } catch (e) {
+        if (attempt === retries) {
+          clearTimeout(tid);
+          throw e;
+        }
+        await new Promise(res => setTimeout(res, 1000));
       }
-      
-      return response;
     }
   }
 
@@ -212,8 +221,8 @@ JSON Format:
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000,
+            temperature: 0.3,
+            maxOutputTokens: 800,
             responseMimeType: "application/json"
           }
         })
