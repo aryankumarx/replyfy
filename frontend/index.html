@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Keyboard Assistant</title>
+  <title>Replyfy — AI Smart Replies</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -230,7 +230,7 @@
       letter-spacing: 0.5px;
     }
 
-    .tone-casual {
+    .tone-casual, .tone-sweet {
       background: rgba(16, 185, 129, 0.15);
       color: #10b981;
       border: 1px solid rgba(16, 185, 129, 0.25);
@@ -242,7 +242,7 @@
       border: 1px solid rgba(99, 102, 241, 0.25);
     }
 
-    .tone-brief {
+    .tone-brief, .tone-decline {
       background: rgba(251, 191, 36, 0.15);
       color: #fbbf24;
       border: 1px solid rgba(251, 191, 36, 0.25);
@@ -252,6 +252,18 @@
       background: rgba(244, 114, 182, 0.15);
       color: #f472b6;
       border: 1px solid rgba(244, 114, 182, 0.25);
+    }
+
+    .tone-genz {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+
+    .tone-sarcastic {
+      background: rgba(251, 146, 60, 0.15);
+      color: #fb923c;
+      border: 1px solid rgba(251, 146, 60, 0.25);
     }
 
     .copy-hint {
@@ -356,10 +368,10 @@
 <div class="container">
   <!-- Header -->
   <div class="header">
-    <div class="logo">⌨️</div>
-    <h1>AI Keyboard Assistant</h1>
+    <div class="logo">⚡</div>
+    <h1>Replyfy</h1>
     <p>Paste a message, get smart replies instantly</p>
-    <span class="badge">✦ POWERED BY GEMINI 2.5 FLASH-LITE</span>
+    <span class="badge">✦ POWERED BY GEMINI 2.0 FLASH</span>
   </div>
 
   <!-- Input Card -->
@@ -369,7 +381,7 @@
       <textarea id="messageInput" placeholder="Paste the message you received here...&#10;&#10;Example: Hey! Are you free for dinner tomorrow?" maxlength="1000"></textarea>
       <span class="char-count" id="charCount">0 / 1000</span>
     </div>
-    <button class="btn-generate" id="generateBtn" onclick="generateSuggestions()">
+    <button class="btn-generate" id="generateBtn">
       ⚡ Generate Smart Replies
     </button>
     <div id="errorMsg"></div>
@@ -381,7 +393,7 @@
   <!-- Status -->
   <div class="status-bar">
     <span><span class="status-dot" id="statusDot"></span> <span id="statusText">Checking API...</span></span>
-    <span id="modelInfo">Model: gemini-2.5-flash-lite</span>
+    <span id="modelInfo">Model: gemini-2.5-flash</span>
   </div>
 
   <div class="footer">
@@ -484,23 +496,29 @@
     }
   }
 
+  // Store suggestions for safe copy access (avoids inline onclick quote-breaking)
+  let _currentSuggestions = [];
+
   // Render suggestion cards
   function renderSuggestions(suggestions, usage) {
     const container = document.getElementById('suggestionsContainer');
+    _currentSuggestions = suggestions;
 
-    const toneIcons = { casual: '😊', professional: '💼', brief: '⚡', quick: '💬' };
+    const toneIcons = { casual: '😊', professional: '💼', brief: '⚡', quick: '💬', genz: '🔥', sarcastic: '😏', sweet: '💖', decline: '🚫' };
 
     let html = '<div class="card"><div class="card-label">💬 Smart Replies</div>';
 
     suggestions.forEach((s, i) => {
       const toneClass = `tone-${s.tone}`;
+      // Escape HTML in suggestion text to prevent XSS / broken rendering
+      const safeText = s.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       html += `
-        <div class="suggestion-card" onclick="copyText('${s.text.replace(/'/g, "\\'")}')">
+        <div class="suggestion-card" data-index="${i}">
           <div class="suggestion-header">
             <span class="tone-badge ${toneClass}">${toneIcons[s.tone] || '💬'} ${s.label || s.tone}</span>
             <span class="copy-hint">Click to copy</span>
           </div>
-          <div class="suggestion-text">${s.text}</div>
+          <div class="suggestion-text">${safeText}</div>
         </div>
       `;
     });
@@ -513,15 +531,34 @@
 
     html += '</div>';
     container.innerHTML = html;
+
+    // Attach click handlers via event delegation (safe with any text content)
+    container.querySelectorAll('.suggestion-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const idx = parseInt(card.dataset.index, 10);
+        copyText(_currentSuggestions[idx].text);
+      });
+    });
   }
 
   // Copy to clipboard
   function copyText(text) {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    });
     const toast = document.getElementById('toast');
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
   }
+
+  // Button click handler (no inline onclick — CSP blocks it)
+  document.getElementById('generateBtn').addEventListener('click', generateSuggestions);
 
   // Enter key shortcut
   textarea.addEventListener('keydown', (e) => {

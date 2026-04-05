@@ -1,6 +1,6 @@
 <div align="center">
   
-# Replyfy - V1.1.0 Beta
+# Replyfy - V1.2.0 Beta
 *Never type another boring reply again*
 
 [![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) 
@@ -30,20 +30,21 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 
 | Version | Date | Size | Key Changes |
 |---------|------|------|-------------|
+| **v1.2.0 Beta** | Apr 2026 | 25MB | Added 6 Diverse AI Tones (Gen Z, Sarcastic, Sweet, etc.), Major UI Revamp, Gemini 2.5 Flash Migration |
 | **v1.1.0 Beta** | Apr 2026 | 25MB | ProGuard compression (75% size reduction), ClipboardGrabberActivity, security hardening |
 | v1.0.0 | Mar 2026 | 104MB | Initial stable release |
 
-**Latest:** [v1.1.0 Beta APK (25MB)](https://github.com/aryankumarx/replyfy/releases/download/v1.1.0-beta/Replyfy.apk)
+**Latest:** [v1.2.0 Beta APK (25MB)](https://github.com/aryankumarx/replyfy/releases/download/v1.2.0-beta/Replyfy.apk)
 
 ---
 
-## What's New in V1.1.0
+## What's New in V1.2.0
 
+- **6 Unique Smart Tones** - Generate replies spanning Gen Z, Sarcastic, Sweet, Professional, Decline, and Quick styles.
+- **UI & Visual Overhaul** - Stunning glassmorphism UI with custom color-coded badges for every tone.
+- **Gemini 2.5 Flash Migration** - Swapped to the newest high-speed Google multimodal model.
 - **25MB APK** - ProGuard compression reduced size from 104MB to 25MB (75% reduction)
-- **ClipboardGrabberActivity** - Bypasses Android 10+ background clipboard restrictions using 1x1 pixel foreground service
-- **Ghost Activity** - Eliminates persistent "Displaying over other apps" OS warnings
-- **local.properties** - API keys secured outside source code
-- **WindowManager.removeView()** - Clean floating bubble lifecycle management
+- **Local.properties** - API keys secured completely outside source code with environment variable abstraction.
 
 ---
 
@@ -61,12 +62,14 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 - Automatic clipboard clearing after 10 seconds
 
 ### Language & Tone Support
-| Tone | Length | Languages |
+| Tone | Style | Availability |
 |------|--------|-----------|
-| Casual | Full | English, Hindi, Hinglish |
-| Professional | Full | English, Hindi |
-| Brief | Short | English, Hindi, Hinglish |
-| Quick | 1-3 words | All |
+| **Gen Z** | Trendy, emojis, abbreviations | English, Hinglish |
+| **Sarcastic** | Witty, playful, dry humor | English, Hinglish |
+| **Sweet** | Empathetic, warm, polite | English, Hindi |
+| **Professional** | Formal, respectful, concise | English, Hindi |
+| **Decline** | Polite refusal, setting boundaries | English, Hindi |
+| **Quick** | 1-3 words, rapid response | All |
 
 ---
 
