@@ -10,10 +10,11 @@ STATUS: APP IS FULLY WORKING (v1.2.0 UPGRADE & UI REVAMP)
 - Integrated the new diverse models: Gen Z, Sarcastic, Sweet, Professional, Decline, and Quick Reply.
 - Significantly improved the dynamic flexibility of the Gemini 2.5 Flash model logic to match nuanced human emotions.
 
-2. UI & VISUAL REVAMP
-- Completely overhauled the user interface with distinct, vibrant CSS branding for each AI tone.
-- Added custom gradient pallets and glassmorphic aesthetic touches to make the smart replies instantly recognizable (e.g. Sarcastic uses an orange/pink hue, Gen Z uses vibrant cyan/purple, etc).
-- Ensured a premium interaction experience across the web demo when generating and selecting responses.
+2. WEB & MOBILE UI VISUAL REVAMP
+- Completely overhauled the user interface with distinct, vibrant CSS branding for each AI tone on the Web Demo.
+- Designed a stunning new mobile App interface featuring separated, clean dashboards: HOME, TONE, and SETTINGS.
+- The Floating Bubble itself was visually upgraded and now natively supports generating AI responses based on explicit user Tone Selection directly on the overlay!
+- Added custom gradient pallets and glassmorphic aesthetic touches to make the smart replies instantly recognizable across platforms.
 
 3. STABLE MODEL MIGRATION
 - Upgraded the native application engine to rely firmly on `gemini-2.5-flash` for lighting fast, high-quality responses.
