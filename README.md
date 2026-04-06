@@ -40,8 +40,10 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 
 ## What's New in V1.2.0
 
+- **Separated User Dashboards** - The mobile app now features completely decoupled, aesthetic dashboards (Home, Tone, and Settings) for seamless user control.
+- **Tone Selection on Bubble** - The floating bubble overlay now natively integrates smart tone selection, generating customized AI replies without ever opening the main app!
 - **6 Unique Smart Tones** - Generate replies spanning Gen Z, Sarcastic, Sweet, Professional, Decline, and Quick styles.
-- **UI & Visual Overhaul** - Stunning glassmorphism UI with custom color-coded badges for every tone.
+- **UI & Visual Overhaul** - Stunning glassmorphism UI with custom color-coded badges matching every tone profile across both the Web Demo and Mobile environments.
 - **Gemini 2.5 Flash Migration** - Swapped to the newest high-speed Google multimodal model.
 - **25MB APK** - ProGuard compression reduced size from 104MB to 25MB (75% reduction)
 - **Local.properties** - API keys secured completely outside source code with environment variable abstraction.
