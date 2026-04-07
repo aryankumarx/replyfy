@@ -107,7 +107,7 @@ export const styles = StyleSheet.create({
   // Nav
   nav: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 82, backgroundColor: C.surfaceLow, borderTopWidth: 1, borderTopColor: C.white10, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', paddingTop: 12 },
   navTab: { alignItems: 'center', flex: 1 },
-  navIconWrap: { width: 44, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  navIconWrap: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   navIconWrapActive: { backgroundColor: 'rgba(99,102,241,0.15)' },
   navLabel: { color: C.outline, fontSize: 9, fontWeight: '800', letterSpacing: 1.2, marginTop: 5, opacity: 0.4 },
 });
