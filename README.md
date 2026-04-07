@@ -1,6 +1,6 @@
 <div align="center">
   
-# Replyfy - V1.2.0 Beta
+# Replyfy - v1.3.0
 *Never type another boring reply again*
 
 [![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) 
@@ -30,23 +30,27 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 
 | Version | Date | Size | Key Changes |
 |---------|------|------|-------------|
-| **v1.2.0 Beta** | Apr 2026 | 25MB | Added 6 Diverse AI Tones (Gen Z, Sarcastic, Sweet, etc.), Major UI Revamp, Gemini 2.5 Flash Migration |
-| **v1.1.0 Beta** | Apr 2026 | 25MB | ProGuard compression (75% size reduction), ClipboardGrabberActivity, security hardening |
+| **v1.3.0** | Apr 2026 | 23MB | Migrated to robust Gemini 2.5 Flash Lite, exponential backoff anti-crash, security hardening |
+| **v1.2.0 Beta** | Apr 2026 | 25MB | Added 6 Diverse AI Tones, Major UI Revamp |
+| **v1.1.0 Beta** | Apr 2026 | 25MB | ProGuard compression, ClipboardGrabberActivity, security hardening |
 | v1.0.0 | Mar 2026 | 104MB | Initial stable release |
 
-**Latest:** [v1.2.0 Beta APK (25MB)](https://github.com/aryankumarx/replyfy/releases/download/v1.2.0-beta/Replyfy.apk)
+**Latest:** [v1.3.0 APK (23MB)](https://github.com/aryankumarx/replyfy/releases/latest/download/app-release.apk)
 
 ---
 
-## What's New in V1.2.0
+## What's New in v1.3.0
 
-- **Separated User Dashboards** - The mobile app now features completely decoupled, aesthetic dashboards (Home, Tone, and Settings) for seamless user control.
-- **Tone Selection on Bubble** - The floating bubble overlay now natively integrates smart tone selection, generating customized AI replies without ever opening the main app!
+- **Gemini 2.5 Flash-Lite Migration** - Re-engineered backend to use the newest, fastest, and most quota-generous Google AI model, bypassing legacy rate-limit crashes.
+- **DDoS/Quota Exponential Backoff** - System gracefully sleeps and automatically recovers spanning a 124-second window if free-tier limits are ever reached, practically eliminating crashes.
+- **Security Hardening** - Completely isolated Android API keys inside a gitignored `secrets.properties` injected securely via Gradle BuildConfig, completely eliminating API token scraping risks on GitHub.
+- **Smaller Footprint** - APK is now stripped down further to ~23MB.
+
+## Previous Highlights (v1.2.0)
+- **Separated User Dashboards** - The mobile app features decoupled, aesthetic dashboards (Home, Tone, and Settings).
+- **Tone Selection on Bubble** - The floating bubble overlay natively integrates smart tone selection.
 - **6 Unique Smart Tones** - Generate replies spanning Gen Z, Sarcastic, Sweet, Professional, Decline, and Quick styles.
-- **UI & Visual Overhaul** - Stunning glassmorphism UI with custom color-coded badges matching every tone profile across both the Web Demo and Mobile environments.
-- **Gemini 2.5 Flash Migration** - Swapped to the newest high-speed Google multimodal model.
-- **25MB APK** - ProGuard compression reduced size from 104MB to 25MB (75% reduction)
-- **Local.properties** - API keys secured completely outside source code with environment variable abstraction.
+- **UI & Visual Overhaul** - Stunning glassmorphism UI with custom color-coded badges matching every tone profile.
 
 ---
 
@@ -81,7 +85,7 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 |-----------|------------|
 | **Frontend** | React Native 0.73 + Kotlin Native Modules |
 | **Backend** | Node.js 18+ + Express.js |
-| **AI Engine** | Google Gemini 2.5 Flash |
+| **AI Engine** | Google Gemini 2.5 Flash-Lite |
 | **Native** | Kotlin (`WindowManager`, `AccessibilityService`) |
 | **Security** | Helmet.js, express-rate-limit, express-validator |
 | **Deployment** | Render.com |
@@ -135,7 +139,7 @@ cd replyfy/AIKeyboardMobile/android
 
 ## Roadmap
 
-### V1.2.0 (Next)
+### V1.4.0 (Next)
 - Background clipboard service (true background operation)
 - Voice-to-text input integration
 - Custom tone builder
