@@ -27,10 +27,10 @@ class GeminiService {
       throw new Error('GEMINI_API_KEY is not set in environment variables.');
     }
     this.apiKey = process.env.GEMINI_API_KEY;
-    // Using gemini-1.5-flash on v1 — stable and has 1500 requests/day
-    this.apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+    // Using gemini-2.5-flash-lite — newest, fastest, cheapest free model
+    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${this.apiKey}`;
     this._initialized = true;
-    console.log('✅ Gemini service initialized (model: gemini-1.5-flash/v1)');
+    console.log('✅ Gemini service initialized (model: gemini-2.5-flash-lite)');
   }
 
 

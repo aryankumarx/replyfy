@@ -1,8 +1,49 @@
 AI KEYBOARD ASSISTANT - CURRENT DEVELOPMENT STATE
-Date: April 5, 2026
+Date: April 8, 2026
 
 =============================================
-STATUS: APP IS FULLY WORKING (v1.2.0 UPGRADE & UI REVAMP)
+STATUS: APP IS FULLY WORKING (v1.3.0 GEMINI API FIX & MODEL MIGRATION)
+=============================================
+
+1. CRITICAL: GEMINI MODEL MIGRATION
+   - Error Detected/Fixed: Google retired `gemini-1.5-flash` from both v1 and v1beta API endpoints.
+     All requests returned "models/gemini-1.5-flash is not found for API version v1".
+   - Attempted `gemini-1.5-flash-latest` on v1beta → same "not found" error.
+   - Attempted `gemini-2.0-flash-lite` on v1beta → blocked with "no longer available to new users."
+   - Resolution: Queried Google's ListModels API to discover available models. Successfully migrated
+     to `gemini-2.5-flash-lite` on v1beta — the newest, fastest, and cheapest free-tier model.
+   - Root Cause: Google aggressively deprecates older model aliases. The `responseMimeType` field
+     in generationConfig was also causing "Unknown name" errors on v1 — removed it entirely.
+     JSON output is now enforced via prompt instructions + robust `_extractJSON()` parser.
+
+2. RATE LIMIT PROTECTION UPGRADE
+   - Upgraded exponential backoff from 3 retries / 2s base → 5 retries / 4s base.
+   - New retry pattern: 4s → 8s → 16s → 32s → 64s (total ~124s coverage).
+   - This exceeds Google's 60-second free-tier RPM reset window, ensuring the app
+     silently recovers from quota exhaustion instead of crashing.
+
+3. SECURITY HARDENING FOR GITHUB PUSH
+   - Added `secrets.properties` to `.gitignore` — this file contains the raw `API_KEY`
+     and `API_URL` used by the Android Gradle build system (BuildConfig injection).
+   - Added debug scripts (`list_models.js`, `list_output.txt`) to `.gitignore`.
+   - Verified: `.env` (backend secrets) is already gitignored.
+   - Verified: No Gemini API keys (`AIzaSy...`) appear in any tracked source files.
+   - Verified: `APP_API_KEY` in `App.tsx` and `secrets.properties` is a placeholder
+     string, not a real cloud credential — safe for public repos.
+
+4. BUBBLE UI MINOR TWEAK
+   - Removed emoji prefix from "AI SMART REPLIES" panel header (was "✨ AI SMART REPLIES").
+
+=============================================
+FILES MODIFIED IN v1.3.0:
+=============================================
+- backend/src/services/gemini.service.js (model URL + backoff config)
+- .gitignore (secrets.properties, debug scripts)
+- AIKeyboardMobile/android/app/src/main/java/com/aikeyboardmobile/FloatingBubbleService.kt (header text)
+- CHANGELOG.txt (this file)
+
+=============================================
+PREVIOUS STATUS: (v1.2.0 UPGRADE & UI REVAMP — April 5, 2026)
 =============================================
 
 1. EXPANDED SMART AI TONES

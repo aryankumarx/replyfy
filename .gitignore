@@ -102,3 +102,11 @@ quickstart.sh
 **/*.jks
 **/*.keystore
 /tmp/
+
+# Secret configs (contain API keys!)
+**/secrets.properties
+!**/secrets.properties.example
+
+# Debug/temporary scripts
+**/list_models.js
+**/list_output.txt
