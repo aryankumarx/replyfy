@@ -30,12 +30,12 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 
 | Version | Date | Size | Key Changes |
 |---------|------|------|-------------|
-| **v1.3.0** | Apr 2026 | 23MB | Migrated to robust Gemini 2.5 Flash Lite, exponential backoff anti-crash, security hardening |
+| **v1.3.0** | Apr 2026 | 46MB | Migrated to robust Gemini 2.5 Flash Lite, exponential backoff anti-crash, security hardening |
 | **v1.2.0 Beta** | Apr 2026 | 25MB | Added 6 Diverse AI Tones, Major UI Revamp |
 | **v1.1.0 Beta** | Apr 2026 | 25MB | ProGuard compression, ClipboardGrabberActivity, security hardening |
 | v1.0.0 | Mar 2026 | 104MB | Initial stable release |
 
-**Latest:** [v1.3.0 APK (23MB)](https://github.com/aryankumarx/replyfy/releases/latest/download/app-release.apk)
+**Latest:** [v1.3.0 APK (46MB)](https://github.com/aryankumarx/replyfy/releases/latest/download/app-release.apk)
 
 ---
 
