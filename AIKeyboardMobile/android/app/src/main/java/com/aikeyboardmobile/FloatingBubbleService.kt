@@ -495,7 +495,7 @@ class FloatingBubbleService : Service() {
         }
 
         container.addView(TextView(this).apply {
-            text = "✨  AI SMART REPLIES"
+            text = "AI SMART REPLIES"
             textSize = 14f; setTextColor(0xFFA3A6FF.toInt()); // App Primary color
             letterSpacing = 0.1f; setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(0, 0, 0, dp(12))
