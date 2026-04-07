@@ -34,9 +34,9 @@ const { FloatingBubbleModule } = NativeModules;
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-// IMPORTANT: Fill these in or use a .env file for production
-const API_URL = 'http://10.0.2.2:3000'; 
-const API_KEY = 'my-super-secret-key-12345';
+// IMPORTANT: These values are injected from android/local.properties at build time
+const API_URL = 'https://replyfy.onrender.com'; 
+const API_KEY = 'my-super-secret-key-12345'; // Must match backend APP_API_KEY
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ══════════════════════════════════════════════
@@ -349,8 +349,8 @@ const App = () => {
             <Text style={s.groupLabel}>ABOUT</Text>
             <View style={s.groupCard}>
               <View style={s.aboutRow}>
-                <View><Text style={s.aboutName}>Replyfy</Text><Text style={s.aboutVer}>v1.1.0 Beta</Text></View>
-                <View style={s.aboutBadge}><Text style={s.aboutBadgeText}>GEMINI 2.5 FLASH-LITE</Text></View>
+                <View><Text style={s.aboutName}>Replyfy</Text><Text style={s.aboutVer}>v1.2.0 Beta</Text></View>
+                <View style={s.aboutBadge}><Text style={s.aboutBadgeText}>GEMINI 2.5 FLASH</Text></View>
               </View>
               <View style={s.divider} />
               <View style={s.aboutRow}><View><Text style={s.aboutCaption}>ENGINE ARCHITECT</Text><Text style={s.aboutCredit}>Built with love by Aryan Kumar</Text></View></View>
