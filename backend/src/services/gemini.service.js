@@ -27,10 +27,10 @@ class GeminiService {
       throw new Error('GEMINI_API_KEY is not set in environment variables.');
     }
     this.apiKey = process.env.GEMINI_API_KEY;
-    // Using gemini-2.5-flash — available natively on the new API key's free tier
-    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`;
+    // Using gemini-1.5-flash on v1 — stable and has 1500 requests/day
+    this.apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
     this._initialized = true;
-    console.log('✅ Gemini service initialized (model: gemini-2.5-flash)');
+    console.log('✅ Gemini service initialized (model: gemini-1.5-flash/v1)');
   }
 
 
@@ -110,7 +110,7 @@ class GeminiService {
   /**
    * Fetch with retry + exponential backoff for 429 errors
    */
-  async _fetchWithRetry(url, options, retries = 3, baseDelay = 2000) {
+  async _fetchWithRetry(url, options, retries = 5, baseDelay = 4000) {
     for (let attempt = 0; attempt <= retries; attempt++) {
       const response = await fetch(url, options);
       
@@ -213,8 +213,7 @@ JSON Format:
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json"
+            maxOutputTokens: 8192
           }
         })
       });
