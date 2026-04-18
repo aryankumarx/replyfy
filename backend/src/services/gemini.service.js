@@ -186,7 +186,7 @@ NEVER reply in English.`;
 
 ${langInstruction}
 
-Generate exactly 6 reply suggestions with distinctly different, highly expressive personalities:
+Generate exactly 6 reply suggestions STRICTLY IN THE LANGUAGE REQUESTED ABOVE, with distinctly different, highly expressive personalities:
 1. Gen Z - Speak fluent Gen Z internet slang. Use modern abbreviations naturally.
 2. Sarcastic - Provide a witty comeback with a hint of dry sarcasm. Keep it playful.
 3. Sweet - Warm and affectionate.
@@ -197,8 +197,8 @@ Generate exactly 6 reply suggestions with distinctly different, highly expressiv
 IMPORTANT RULES & NO CONTEXT HANDLER:
 - Write exactly like a real person texting from a phone.
 - Use emojis ONLY when absolutely natural. Do not force emojis into every sentence.
-- NO unnecessary punctuation. Real people text "Yeah that sounds good" not "Yes, that sounds good."
-- Match the EXACT language structure of the incoming message.
+- NO unnecessary punctuation. Real people text naturally without periods.
+- CRITICAL: Match the EXACT language of the incoming message. IF requested in Hindi or Hinglish, EVERY SINGLE tone (Gen Z, Professional, etc.) MUST be written in that language.
 - If the received message is extremely short (like "ok", "hi") or lacks context, do NOT invent fake stories. Simply respond with realistic conversational fillers (e.g. "what's up?", "and?", "huh?").
 - Output ONLY the JSON array.
 
