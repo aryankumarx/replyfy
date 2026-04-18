@@ -110,3 +110,6 @@ quickstart.sh
 # Debug/temporary scripts
 **/list_models.js
 **/list_output.txt
+
+# Gradle properties (contains keystore passwords!)
+**/gradle.properties
