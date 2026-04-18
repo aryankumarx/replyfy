@@ -85,6 +85,7 @@ frontend/node_modules/
 # Template guide files (not part of the project)
 *.md
 !README.md
+!INSTALLATION.md
 
 # Legacy/Unused template directories
 /frontend/
