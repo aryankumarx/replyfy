@@ -67,7 +67,7 @@ const App = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [blockedCount, setBlockedCount] = useState(0);
-  const [selectedTones, setSelectedTones] = useState<string[]>(['genz', 'sarcastic', 'sweet']);
+  const [selectedTones, setSelectedTones] = useState<string[]>(ALL_TONES.map(t => t.id));
   const [toastMsg, setToastMsg] = useState('');
 
   const toastAnim = useRef(new Animated.Value(0)).current;

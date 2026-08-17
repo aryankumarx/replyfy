@@ -275,19 +275,22 @@ JSON Format:
         { text: "Thanks for letting me know!", tone: "casual", label: "Friendly" },
         { text: "I appreciate the message.", tone: "professional", label: "Polite" },
         { text: "Got it, thanks!", tone: "brief", label: "Short" },
-        { text: "Ok!", tone: "quick", label: "Quick Reply" }
+        { text: "Ok!", tone: "quick", label: "Quick Reply" },
+        { text: "You always make my day brighter ✨", tone: "playful", label: "Playful" }
       ],
       hindi: [
         { text: "धन्यवाद! मुझे बता दिया।", tone: "casual", label: "मित्रवत" },
         { text: "आपका संदेश मिल गया।", tone: "professional", label: "विनम्र" },
         { text: "ठीक है, धन्यवाद!", tone: "brief", label: "संक्षिप्त" },
-        { text: "ठीक है!", tone: "quick", label: "Quick Reply" }
+        { text: "ठीक है!", tone: "quick", label: "Quick Reply" },
+        { text: "आपकी बात में अलग ही बात है ✨", tone: "playful", label: "Playful" }
       ],
       hinglish: [
         { text: "Thanks yaar! Noted.", tone: "casual", label: "Friendly" },
         { text: "Theek hai, message mil gaya.", tone: "professional", label: "Polite" },
         { text: "Ok noted!", tone: "brief", label: "Short" },
-        { text: "Haan bhai!", tone: "quick", label: "Quick Reply" }
+        { text: "Haan bhai!", tone: "quick", label: "Quick Reply" },
+        { text: "Aapka message dekh ke smile aa gayi ✨", tone: "playful", label: "Playful" }
       ]
     };
     return fallbacks[language] || fallbacks.english;
