@@ -3,8 +3,7 @@
 # Replyfy - v1.4.0
 *Never type another boring reply again*
 
-[![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com)
-[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen)](https://github.com/aryankumarx/replyfy/releases)
+[![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) [![Download APK v1.4.0](https://img.shields.io/badge/Download-v1.4.0_APK-brightgreen)](https://github.com/aryankumarx/replyfy/releases/tag/v1.4.0)
 
 </div>
 
