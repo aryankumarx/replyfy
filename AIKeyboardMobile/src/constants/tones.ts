@@ -6,6 +6,7 @@ export const ALL_TONES = [
   { id: 'professional', label: 'Professional',  desc: 'Polished, business-appropriate replies',           icon: '◆' },
   { id: 'decline',      label: 'Decline',       desc: 'Politely disagree or say no to plans',             icon: '✕' },
   { id: 'quick',        label: 'Quick Reply',   desc: 'Ultra-short 2–5 word responses',                   icon: '⚡' },
+  { id: 'playful',      label: 'Playful',       desc: 'Flirty, poetic, or romantic rizz',                 icon: '✨' },
 ];
 
-export const MAX_TONES = 3; // Note: We lifted this restriction in App.tsx but kept the constant for reference or future toggles
+export const MAX_TONES = 4; // Lifted restriction, but keeping reference

@@ -1,8 +1,35 @@
 AI KEYBOARD ASSISTANT - CURRENT DEVELOPMENT STATE
-Date: April 8, 2026
+Date: August 17, 2026
 
 =============================================
-STATUS: APP IS FULLY WORKING (v1.3.0 GEMINI API FIX & MODEL MIGRATION)
+STATUS: APP IS FULLY WORKING (v1.4.0 PLAYFUL TONE & REBRANDING REFINEMENTS)
+=============================================
+
+1. NEW 7th SMART AI TONE: "PLAYFUL"
+   - Integrated a 7th dedicated tone profile ("Playful") for flirty, poetic, Shayari, and rizz-style reply generation.
+   - Updated frontend tone configuration in `tones.ts` and synced backend prompt logic in `gemini.service.js` to return 7 distinct tones.
+
+2. APP ICON & LAUNCHER REFINEMENT
+   - Updated launcher icons across all mipmap densities (hdpi, mdpi, xhdpi, xxhdpi, xxxhdpi) with optimized asset compression.
+   - Streamlined `AndroidManifest.xml` launcher declaration.
+
+3. ENVIRONMENT & BUILD CONFIG CLEANUP
+   - Re-aligned local configuration in `secrets.properties` to target `https://replyfy.onrender.com`.
+   - Cleared stale Java Language Server crash logs (`hs_err_pid*.log`) and temporary scratch files.
+   - Bumped app `versionCode` to `4` and `versionName` to `1.4.0`.
+
+=============================================
+FILES MODIFIED IN v1.4.0:
+=============================================
+- AIKeyboardMobile/src/constants/tones.ts (7th Playful tone)
+- backend/src/services/gemini.service.js (7-tone JSON output prompt)
+- AIKeyboardMobile/android/app/src/main/AndroidManifest.xml (Icon declaration)
+- AIKeyboardMobile/android/app/build.gradle & package.json (version bump to 1.4.0)
+- AIKeyboardMobile/android/secrets.properties (production backend URL sync)
+- CHANGELOG.txt (this file)
+
+=============================================
+PREVIOUS STATUS: (v1.3.0 GEMINI API FIX & MODEL MIGRATION)
 =============================================
 
 1. CRITICAL: GEMINI MODEL MIGRATION

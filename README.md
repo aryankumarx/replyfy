@@ -1,6 +1,6 @@
 <div align="center">
   
-# Replyfy - v1.3.0
+# Replyfy - v1.4.0
 *Never type another boring reply again*
 
 [![Live API](https://img.shields.io/badge/Live-API-blue)](https://replyfy.onrender.com) 
@@ -30,19 +30,21 @@ Replyfy is a native Android floating bubble that generates contextual AI respons
 
 | Version | Date | Size | Key Changes |
 |---------|------|------|-------------|
+| **v1.4.0** | Aug 2026 | 23MB | Added 7th "Playful" (Rizz/Shayari) tone, launcher icon update, environment cleanup |
 | **v1.3.0** | Apr 2026 | 46MB | Migrated to robust Gemini 2.5 Flash Lite, exponential backoff anti-crash, security hardening |
 | **v1.2.0 Beta** | Apr 2026 | 25MB | Added 6 Diverse AI Tones, Major UI Revamp |
 | **v1.1.0 Beta** | Apr 2026 | 25MB | ProGuard compression, ClipboardGrabberActivity, security hardening |
 | v1.0.0 | Mar 2026 | 104MB | Initial stable release |
 
-**Latest:** [v1.3.0 APK (46MB)](https://github.com/aryankumarx/replyfy/releases/latest/download/app-release.apk)
+**Latest:** [v1.4.0 APK (23MB)](https://github.com/aryankumarx/replyfy/releases/latest/download/app-release.apk)
 
 ---
 
-## What's New in v1.3.0
+## What's New in v1.4.0
 
-- **Gemini 2.5 Flash-Lite Migration** - Re-engineered backend to use the newest, fastest, and most quota-generous Google AI model, bypassing legacy rate-limit crashes.
-- **DDoS/Quota Exponential Backoff** - System gracefully sleeps and automatically recovers spanning a 124-second window if free-tier limits are ever reached, practically eliminating crashes.
+- **7th AI Tone profile ("Playful")** - Generates flirty, poetic, Shayari, and rizz-style replies.
+- **Launcher Icon Overhaul** - Compressed and redesigned launcher icons across all mipmap resolutions.
+- **Environment & Build Config Sync** - Production backend URL synchronized and version code bumped to 4.
 - **Security Hardening** - Completely isolated Android API keys inside a gitignored `secrets.properties` injected securely via Gradle BuildConfig, completely eliminating API token scraping risks on GitHub.
 - **Smaller Footprint** - APK is now stripped down further to ~23MB.
 

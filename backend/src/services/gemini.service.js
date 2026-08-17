@@ -186,13 +186,14 @@ NEVER reply in English.`;
 
 ${langInstruction}
 
-Generate exactly 6 reply suggestions STRICTLY IN THE LANGUAGE REQUESTED ABOVE, with distinctly different, highly expressive personalities:
+Generate exactly 7 reply suggestions STRICTLY IN THE LANGUAGE REQUESTED ABOVE, with distinctly different, highly expressive personalities:
 1. Gen Z - Speak fluent Gen Z internet slang. Use modern abbreviations naturally.
 2. Sarcastic - Provide a witty comeback with a hint of dry sarcasm. Keep it playful.
 3. Sweet - Warm and affectionate.
 4. Professional - Polished, business-appropriate, and formally courteous.
 5. Decline - Politely disagree, say no to a plan, or express disagreement with the statement.
 6. Quick Reply - Respond in the shortest way physically possible. Maximum 5 words.
+7. Playful - Flirty, poetic, Shayari, or romantic in a distinct Shayari/rizz style.
 
 IMPORTANT RULES & NO CONTEXT HANDLER:
 - Write exactly like a real person texting from a phone.
@@ -203,7 +204,7 @@ IMPORTANT RULES & NO CONTEXT HANDLER:
 - Output ONLY the JSON array.
 
 JSON Format:
-[{"text":"...","tone":"genz","label":"Gen Z"}, {"text":"...","tone":"sarcastic","label":"Sarcastic"}, {"text":"...","tone":"sweet","label":"Sweet"}, {"text":"...","tone":"professional","label":"Professional"}, {"text":"...","tone":"decline","label":"Decline"}, {"text":"...","tone":"quick","label":"Quick Reply"}]`;
+[{"text":"...","tone":"genz","label":"Gen Z"}, {"text":"...","tone":"sarcastic","label":"Sarcastic"}, {"text":"...","tone":"sweet","label":"Sweet"}, {"text":"...","tone":"professional","label":"Professional"}, {"text":"...","tone":"decline","label":"Decline"}, {"text":"...","tone":"quick","label":"Quick Reply"}, {"text":"...","tone":"playful","label":"Playful"}]`;
 
     try {
       const response = await this._fetchWithRetry(this.apiUrl, {
