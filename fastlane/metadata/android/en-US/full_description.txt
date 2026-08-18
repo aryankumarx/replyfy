@@ -1,0 +1,1 @@
+Replyfy is a native Android floating overlay that generates contextual AI responses directly over WhatsApp, Telegram, and SMS without app switching.
