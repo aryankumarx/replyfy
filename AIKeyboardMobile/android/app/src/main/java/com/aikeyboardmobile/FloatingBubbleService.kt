@@ -45,8 +45,33 @@ class FloatingBubbleService : Service() {
         private val API_KEY = BuildConfig.API_KEY
         private val SENSITIVE_PREFIXES = listOf("sk-", "api-", "ghp_", "gho_", "AIza", "Bearer ", "eyJ")
 
-        // Static callback for Accessibility Service → chat app detection
-        var onChatAppStateChanged: ((Boolean) -> Unit)? = null
+        private val APP_COLORS = mapOf(
+            // ===== Production chat apps =====
+            "com.whatsapp" to 0xB325D366.toInt(), // WhatsApp Green
+            "com.whatsapp.w4b" to 0xB3128C7E.toInt(), // WhatsApp Business Teal
+            "org.telegram.messenger" to 0xB32AABEE.toInt(), // Telegram Blue
+            "com.instagram.android" to 0xB3E4405F.toInt(), // Instagram Pink-Red
+            "com.facebook.orca" to 0xB30084FF.toInt(), // Messenger Blue
+            "com.twitter.android" to 0xB31DA1F2.toInt(), // Twitter/X Blue
+            "com.snapchat.android" to 0xB3FFCC00.toInt(), // Snapchat Yellow
+            "com.linkedin.android" to 0xB30A66C2.toInt(), // LinkedIn Blue
+            "com.discord" to 0xB35865F2.toInt(), // Discord Blurple
+            "com.google.android.apps.messaging" to 0xB34285F4.toInt(), // Google Messages Blue
+            "com.android.messaging" to 0xB34285F4.toInt(),
+
+            // ===== Emulator live testing aliases (test colors on stock apps!) =====
+            "com.android.chrome" to 0xB325D366.toInt(), // Chrome → WhatsApp Green 🟢
+            "com.google.android.gm" to 0xB32AABEE.toInt(), // Gmail → Telegram Blue 🔵
+            "com.google.android.apps.nbu.files" to 0xB3E4405F.toInt(), // Files app → Instagram Pink 🔴
+            "com.google.android.deskclock" to 0xB3FFCC00.toInt(), // Clock app → Snapchat Yellow 🟡
+            "com.android.deskclock" to 0xB3FFCC00.toInt(),
+            "com.google.android.calculator" to 0xB35865F2.toInt(), // Calculator → Discord Blurple 🟣
+            "com.android.calculator2" to 0xB35865F2.toInt()
+        )
+        private const val DEFAULT_BUBBLE_COLOR = 0xB36063EE.toInt()
+
+        // Static callback for Accessibility Service → chat app detection & package name
+        var onChatAppChanged: ((String?) -> Unit)? = null
     }
 
     private lateinit var windowManager: WindowManager
@@ -56,6 +81,7 @@ class FloatingBubbleService : Service() {
     private var dismissView: View? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
     private var currentMessage = ""
+    private var currentChatPackage: String? = null
     private var screenWidth = 0
     private var screenHeight = 0
     private val bubbleSize by lazy { dp(56) }
@@ -120,14 +146,17 @@ class FloatingBubbleService : Service() {
         showBubble()
 
         // Listen for chat app state changes (from Accessibility Service)
-        onChatAppStateChanged = { isChatApp ->
+        onChatAppChanged = { chatPackage ->
             android.os.Handler(mainLooper).post {
-                isInChatApp = isChatApp
-                Log.d(TAG, "Chat app state → $isChatApp")
-                if (isChatApp) {
-                    // Entering chat app → ensure bubble is created and visible
+                currentChatPackage = chatPackage
+                isInChatApp = (chatPackage != null)
+                Log.d(TAG, "Chat app changed → $chatPackage")
+                if (chatPackage != null) {
+                    // Entering chat app → ensure bubble is created and tinted with app brand color
                     if (bubbleView == null) {
                         showBubble()
+                    } else {
+                        tintBubble(chatPackage)
                     }
                 } else {
                     // Leaving chat app → remove bubble fully to clear Android's system warning
@@ -166,7 +195,7 @@ class FloatingBubbleService : Service() {
     override fun onDestroy() {
         isServiceRunning = false
         clipListener?.let { clipboardManager.removePrimaryClipChangedListener(it) }
-        onChatAppStateChanged = null
+        onChatAppChanged = null
         removePanel()
         removeBubble()
         hideDismissZone()
@@ -178,14 +207,28 @@ class FloatingBubbleService : Service() {
     // BUBBLE — Always visible, draggable, edge-snapping, dismiss zone
     // ═══════════════════════════════════════════════════════════════
 
+    private fun getBubbleColor(pkg: String?): Int {
+        return if (pkg != null) (APP_COLORS[pkg] ?: DEFAULT_BUBBLE_COLOR) else DEFAULT_BUBBLE_COLOR
+    }
+
+    private fun tintBubble(packageName: String?) {
+        val color = getBubbleColor(packageName)
+        (bubbleView as? TextView)?.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(color)
+            setStroke(dp(2), 0x70FFFFFF.toInt()) // Frosted glass border
+        }
+    }
+
     private fun showBubble() {
         removeBubble()
 
+        val bubbleColor = getBubbleColor(currentChatPackage)
         bubbleView = TextView(this).apply {
-            text = "⌨️"; textSize = 24f; gravity = Gravity.CENTER; elevation = 10f
+            text = "⌨️"; textSize = 24f; gravity = Gravity.CENTER; elevation = 14f
             background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL; setColor(0xAA6063EE.toInt()) // Glassy Primary Indigo (Alpha 0xAA)
-                setStroke(dp(2), 0x40FFFFFF.toInt()) // Glass edge
+                shape = GradientDrawable.OVAL; setColor(bubbleColor)
+                setStroke(dp(2), 0x70FFFFFF.toInt()) // Frosted glass border
             }
         }
 
@@ -568,9 +611,10 @@ class FloatingBubbleService : Service() {
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply { bottomMargin = dp(8) }
             }
+            val accentColor = if (currentChatPackage != null) (getBubbleColor(currentChatPackage) or 0xFF000000.toInt()) else 0xFF6063EE.toInt()
             card.addView(TextView(this).apply {
                 this.text = label.uppercase()
-                textSize = 10f; setTextColor(0xFF6063EE.toInt()); // App Primary Dim color
+                textSize = 10f; setTextColor(accentColor) // Matches active app color
                 letterSpacing = 0.15f; setTypeface(null, android.graphics.Typeface.BOLD)
             })
             card.addView(TextView(this).apply {

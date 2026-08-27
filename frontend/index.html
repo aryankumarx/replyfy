@@ -1,559 +1,593 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Replyfy — AI Smart Replies (v1.4.0)</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Replyfy — The Fastest Way to Reply on Android</title>
+  <meta name="description" content="Replyfy is a minimalist floating AI overlay for Android that generates smart, context-aware replies directly over WhatsApp, Telegram, and SMS.">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-lowest": "#0e0e14",
+            "primary-fixed": "#e1e0ff",
+            "error": "#ffb4ab",
+            "tertiary": "#c0c1ff",
+            "on-surface": "#e4e1ea",
+            "on-background": "#e4e1ea",
+            "tertiary-fixed": "#e1e0ff",
+            "error-container": "#93000a",
+            "ai-lavender": "#c0c1ff",
+            "on-secondary": "#003824",
+            "outline-variant": "#464554",
+            "surface-dim": "#131319",
+            "on-primary-container": "#0d0096",
+            "surface-glass": "rgba(53, 52, 59, 0.4)",
+            "on-tertiary": "#292b5e",
+            "inverse-on-surface": "#303036",
+            "primary-fixed-dim": "#c0c1ff",
+            "on-error-container": "#ffdad6",
+            "border-white-low": "rgba(255, 255, 255, 0.1)",
+            "inverse-surface": "#e4e1ea",
+            "surface": "#131319",
+            "surface-tint": "#c0c1ff",
+            "on-error": "#690005",
+            "surface-variant": "#34343b",
+            "on-tertiary-container": "#222457",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-container-high": "#2a2930",
+            "status-green": "#4edea3",
+            "primary": "#c0c1ff",
+            "on-secondary-container": "#00311f",
+            "surface-bright": "#39383f",
+            "on-tertiary-fixed": "#131449",
+            "surface-container-low": "#1b1b21",
+            "secondary-fixed-dim": "#4edea3",
+            "surface-container": "#1f1f25",
+            "secondary": "#4edea3",
+            "on-secondary-fixed": "#002113",
+            "background": "#131319",
+            "on-surface-variant": "#c7c4d7",
+            "tertiary-container": "#8a8cc6",
+            "tertiary-fixed-dim": "#c0c1ff",
+            "primary-container": "#8083ff",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "inverse-primary": "#494bd6",
+            "on-primary-fixed": "#07006c",
+            "on-primary": "#1000a9",
+            "secondary-container": "#00a572",
+            "shadow-glow": "rgba(128, 131, 255, 0.3)",
+            "on-tertiary-fixed-variant": "#404176",
+            "outline": "#908fa0",
+            "surface-container-highest": "#34343b",
+            "secondary-fixed": "#6ffbbe"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "grid-gap": "0.75rem",
+            "section-padding": "4rem",
+            "container-padding": "2rem",
+            "stack-gap": "4rem"
+          },
+          fontFamily: {
+            "headline-xl": ["Space Grotesk", "sans-serif"],
+            "stat-lg": ["Space Grotesk", "sans-serif"],
+            "label-caps": ["Inter", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"]
+          },
+          fontSize: {
+            "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+            "stat-lg": ["24px", { "lineHeight": "1", "fontWeight": "700" }],
+            "label-caps": ["11px", { "lineHeight": "1", "letterSpacing": "0.15em", "fontWeight": "600" }],
+            "body-md": ["15px", { "lineHeight": "1.6", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
+      background-color: #0e0e14;
+      color: #e4e1ea;
       font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      background: #0e0e13;
-      color: #f9f5fd;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
-
-    /* Ambient glow matching app radar */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(99, 102, 241, 0.14) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
-      z-index: 0;
-      pointer-events: none;
+    .glass-minimal {
+      background: rgba(19, 19, 25, 0.6);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
     }
-
-    .container {
+    .text-gradient {
+      background: linear-gradient(135deg, #c0c1ff, #8083ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .glow-button {
+      box-shadow: 0 4px 20px rgba(128, 131, 255, 0.2);
+      transition: all 0.3s ease;
       position: relative;
-      z-index: 1;
-      max-width: 620px;
-      width: 100%;
-      padding: 24px 20px;
+      overflow: hidden;
     }
-
-
-
-    /* Logo Header */
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-      animation: fadeInDown 0.6s ease;
+    .glow-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(128, 131, 255, 0.4);
     }
-
-    .logo-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 72px;
-      height: 72px;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      border-radius: 24px;
-      margin-bottom: 16px;
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
-      font-size: 32px;
-    }
-
-    .header h1 {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      color: #f9f5fd;
-    }
-
-    .header p {
-      color: #acaab1;
-      font-size: 13px;
-      margin-top: 6px;
-    }
-
-    .badge {
-      display: inline-block;
-      margin-top: 14px;
-      padding: 6px 14px;
-      background: #25252d;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      font-size: 10px;
-      color: #a3a6ff;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    /* Cards matching App s.card & s.feedCard */
-    .card {
-      background: #19191f;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 24px;
-      animation: fadeInUp 0.5s ease;
-    }
-
-    .card-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: #acaab1;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 12px;
-    }
-
-    /* Textarea */
-    .input-wrapper {
-      position: relative;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 110px;
-      background: #131319;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px;
-      color: #f9f5fd;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
-      resize: vertical;
-      transition: border-color 0.3s;
-      outline: none;
-    }
-
-    textarea:focus {
-      border-color: #6063ee;
-    }
-
-    textarea::placeholder {
-      color: #48474d;
-    }
-
-    .char-count {
+    .ambient-glow {
       position: absolute;
-      bottom: 12px;
-      right: 14px;
-      font-size: 11px;
-      color: #76747b;
-    }
-
-    /* App Pill Button matching s.generateBtn */
-    .btn-generate {
-      width: 100%;
-      padding: 18px;
-      background: #6063ee;
-      border: none;
-      border-radius: 999px;
-      color: #ffffff;
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      margin-top: 20px;
-      transition: all 0.3s;
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.45);
-    }
-
-    .btn-generate:hover {
-      background: #7376ff;
-      box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
-    }
-
-    .btn-generate:active {
-      transform: scale(0.99);
-    }
-
-    .btn-generate:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .btn-generate .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(128, 131, 255, 0.08) 0%, transparent 60%);
       border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
     }
+    @media (prefers-reduced-motion: no-preference) {
+      .fade-in-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .delay-100 { animation-delay: 100ms; }
+      .delay-200 { animation-delay: 200ms; }
+      .delay-300 { animation-delay: 300ms; }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
+      @keyframes fadeInUp {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .scroll-reveal {
+        opacity: 0;
+        transform: scale(0.95);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .scroll-reveal.is-visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .floating {
+        animation: floating 6s ease-in-out infinite;
+      }
+
+      @keyframes floating {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+
+      .pulse-animate {
+        animation: pulseGlow 2s infinite;
+      }
+
+      @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(192, 193, 255, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(192, 193, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(192, 193, 255, 0); }
       }
     }
 
-    /* Suggestions Container */
-    .suggestions-container {
-      animation: fadeInUp 0.5s ease;
+    .glow-effect {
+      position: absolute;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 60%);
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      mix-blend-mode: overlay;
+    }
+    .glow-button:hover .glow-effect {
+      opacity: 1;
+    }
+    .magnetic {
+      display: inline-block;
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .parallax-bg {
+      transition: transform 0.1s linear;
     }
 
-    .suggestion-card {
-      background: #19191f;
-      border: 1px solid rgba(99, 102, 241, 0.15);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    .suggestion-card:hover {
-      border-color: rgba(99, 102, 241, 0.4);
-      background: #1f1f26;
-      transform: translateX(4px);
-    }
-
-    .suggestion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .reply-tag {
-      color: #a3a6ff;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .reply-hint {
-      color: #76747b;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .suggestion-text {
-      color: #f9f5fd;
-      font-size: 15px;
-      line-height: 23px;
-    }
-
-    /* Toast matching s.toast */
+    /* Toast */
     .toast {
       position: fixed;
-      top: 48px;
+      top: 80px;
       left: 50%;
       transform: translateX(-50%) translateY(-20px);
-      background: #25252d;
-      border: 1px solid rgba(99, 102, 241, 0.15);
-      color: #f9f5fd;
-      padding: 14px 24px;
-      border-radius: 16px;
+      background: #1f1f26;
+      border: 1px solid rgba(192, 193, 255, 0.25);
+      color: #e4e1ea;
+      padding: 10px 22px;
+      border-radius: 9999px;
       font-size: 13px;
       font-weight: 600;
-      letter-spacing: 0.3px;
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
       pointer-events: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
 
-    /* Error */
-    .error-msg {
-      text-align: center;
-      color: #f43f5e;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 14px;
-      padding: 12px;
-      background: rgba(244, 63, 94, 0.08);
-      border: 1px solid rgba(244, 63, 94, 0.2);
-      border-radius: 12px;
-    }
-
-    /* Status bar */
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 24px;
-      font-size: 11px;
-      color: #acaab1;
-    }
-
-    .status-dot {
+    .spinner {
       display: inline-block;
-      width: 7px;
-      height: 7px;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(16, 0, 169, 0.3);
+      border-top-color: #1000a9;
       border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
+      animation: spin 0.6s linear infinite;
     }
-
-    .status-dot.online {
-      background: #10b981;
-      box-shadow: 0 0 6px #10b981;
-    }
-
-    .status-dot.offline {
-      background: #f43f5e;
-    }
-
-    /* Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-16px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Footer */
-    .footer {
-      text-align: center;
-      margin-top: 36px;
-      font-size: 12px;
-      color: #76747b;
-    }
-
-    .footer a {
-      color: #a3a6ff;
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
+<body class="font-body-md antialiased overflow-x-hidden selection:bg-primary/20 selection:text-primary">
 
-<body>
+<div class="fixed inset-0 z-0 pointer-events-none opacity-30 parallax-bg" id="parallax-layer"></div>
 
-  <div class="container">
-    <!-- Logo Header -->
-    <div class="header">
-      <div class="logo-badge">⚡</div>
-      <h1>Replyfy</h1>
-      <p>Contextual AI replies for WhatsApp, Telegram & SMS</p>
-      <span class="badge">GEMINI 2.5 FLASH-LITE</span>
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-primary/10 shadow-[0_1px_20px_rgba(192,193,255,0.05)]">
+  <div class="flex justify-between items-center h-16 px-container-padding w-full max-w-7xl mx-auto">
+    <a href="#" class="flex items-center gap-3 no-underline">
+      <span class="text-xl">⚡</span>
+      <span class="font-headline-xl text-[20px] font-bold text-on-surface tracking-tight">Replyfy</span>
+    </a>
+    <div class="hidden md:flex items-center gap-10">
+      <a class="magnetic text-on-surface-variant/80 hover:text-primary transition-colors duration-300 font-body-md text-sm tracking-wide" href="#features">Features</a>
+      <a class="magnetic text-on-surface-variant/80 hover:text-primary transition-colors duration-300 font-body-md text-sm tracking-wide" href="#demo">Live Demo</a>
+      <a class="magnetic text-on-surface-variant/80 hover:text-primary transition-colors duration-300 font-body-md text-sm tracking-wide" href="https://github.com/aryankumarx/replyfy" target="_blank">GitHub</a>
+      <a class="magnetic text-on-surface-variant/80 hover:text-primary transition-colors duration-300 font-body-md text-sm tracking-wide" href="https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46056" target="_blank">F-Droid</a>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="https://github.com/aryankumarx/replyfy/releases" target="_blank" class="bg-primary text-on-primary px-5 py-1.5 rounded-full font-medium glow-button text-sm transition-transform duration-300 inline-flex items-center gap-1.5 no-underline">
+        <span class="material-symbols-outlined text-[16px]">download</span>
+        Get APK
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN HERO -->
+<main class="relative z-10 pt-40 pb-32 px-container-padding max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[85vh]">
+  <div class="ambient-glow top-1/4 left-1/4 parallax-bg"></div>
+  <div class="ambient-glow bottom-1/4 right-1/4 parallax-bg"></div>
+
+  <div class="text-center max-w-4xl mx-auto mb-20 relative">
+    <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-surface-container border border-border-white-low text-xs font-medium text-primary mb-6 fade-in-up">
+      <span class="w-2 h-2 rounded-full bg-status-green animate-pulse"></span>
+      Open Source & Free Forever · v1.4.0
     </div>
 
-    <!-- Input Card matching s.feedCard / s.card -->
-    <div class="card">
-      <div class="card-label">LAST COPIED MESSAGE</div>
-      <div class="input-wrapper">
-        <textarea id="messageInput"
-          placeholder="Copy a message from WhatsApp or paste here...&#10;&#10;Example: Hey! Are you free for dinner tonight?"
-          maxlength="1000"></textarea>
-        <span class="char-count" id="charCount">0 / 1000</span>
-      </div>
-      <button class="btn-generate" id="generateBtn">
-        ⚡ GENERATE SMART REPLIES
-      </button>
-      <div id="errorMsg"></div>
-    </div>
+    <h1 class="font-headline-xl text-headline-xl text-on-surface mb-8 leading-[1.15] fade-in-up">
+      The fastest way to reply on <span class="text-gradient">Android.</span>
+    </h1>
 
-    <!-- Suggestions Container -->
-    <div id="suggestionsContainer"></div>
+    <p class="font-body-md text-body-md text-on-surface-variant text-lg mb-12 max-w-2xl mx-auto leading-relaxed fade-in-up delay-100">
+      A lightweight floating overlay for your favorite messaging apps. Generate intelligent, context-aware replies instantly with Gemini 2.5, directly over your keyboard.
+    </p>
 
-    <!-- Status -->
-    <div class="status-bar">
-      <span><span class="status-dot" id="statusDot"></span> <span id="statusText">Checking API...</span></span>
-      <span id="modelInfo">MODEL: GEMINI-2.5-FLASH-LITE</span>
-    </div>
-
-    <div class="footer">
-      Built with ❤️ by <a href="https://github.com/aryankumarx" target="_blank">Aryan Kumar</a> ·
-      <a href="https://github.com/aryankumarx/replyfy" target="_blank">GitHub</a>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in-up delay-200">
+      <a href="https://github.com/aryankumarx/replyfy/releases" target="_blank" class="bg-primary text-on-primary px-8 py-3.5 rounded-full font-medium glow-button w-full sm:w-auto flex items-center justify-center gap-2 track-glow no-underline">
+        <span class="glow-effect"></span>
+        <span class="material-symbols-outlined text-xl">download</span>
+        Download APK
+      </a>
+      <a href="https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46056" target="_blank" class="bg-surface-container-high/50 hover:bg-surface-container-high text-on-surface px-8 py-3.5 rounded-full font-medium transition-colors duration-300 w-full sm:w-auto border border-border-white-low flex items-center justify-center gap-2 no-underline">
+        <span class="material-symbols-outlined text-xl">store</span>
+        Get on F-Droid
+      </a>
+      <a href="https://github.com/aryankumarx/replyfy" target="_blank" class="bg-transparent hover:bg-white/5 text-on-surface px-8 py-3.5 rounded-full font-medium transition-colors duration-300 w-full sm:w-auto flex items-center justify-center gap-2 no-underline">
+        <span class="material-symbols-outlined text-xl">code</span>
+        GitHub
+      </a>
     </div>
   </div>
 
-  <!-- Toast matching app -->
-  <div class="toast" id="toast">Copied to clipboard</div>
-
-  <script>
-    const API_URL = window.location.origin;
-
-    const textarea = document.getElementById('messageInput');
-    const charCount = document.getElementById('charCount');
-    textarea.addEventListener('input', () => {
-      charCount.textContent = `${textarea.value.length} / 1000`;
-    });
-
-    async function checkHealth() {
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
-      try {
-        const res = await fetch(`${API_URL}/health`);
-        if (res.ok) {
-          dot.className = 'status-dot online';
-          text.textContent = 'API ONLINE';
-        } else throw new Error();
-      } catch {
-        dot.className = 'status-dot offline';
-        text.textContent = 'API OFFLINE';
-      }
-    }
-    checkHealth();
-
-    let lastRequestTime = 0;
-    const COOLDOWN_MS = 3000;
-
-    async function generateSuggestions() {
-      const message = textarea.value.trim();
-      const btn = document.getElementById('generateBtn');
-      const errorDiv = document.getElementById('errorMsg');
-      const container = document.getElementById('suggestionsContainer');
-
-      if (!message) {
-        errorDiv.innerHTML = '<div class="error-msg">Please paste a message first!</div>';
-        return;
-      }
-
-      const timeSinceLast = Date.now() - lastRequestTime;
-      if (timeSinceLast < COOLDOWN_MS) {
-        const waitSec = ((COOLDOWN_MS - timeSinceLast) / 1000).toFixed(0);
-        errorDiv.innerHTML = `<div class="error-msg">⏳ Please wait ${waitSec}s before sending another request</div>`;
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> GENERATING...';
-      errorDiv.innerHTML = '';
-      container.innerHTML = '';
-      lastRequestTime = Date.now();
-
-      try {
-        const res = await fetch(`${API_URL}/api/suggest`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': 'my-super-secret-key-12345'
-          },
-          body: JSON.stringify({
-            message,
-            userId: 'web-demo',
-            userTier: 'free'
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || 'Request failed');
-        }
-
-        renderSuggestions(data.suggestions, data.usage);
-
-      } catch (err) {
-        errorDiv.innerHTML = `<div class="error-msg">❌ ${err.message}</div>`;
-      } finally {
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.innerHTML = '⚡ GENERATE SMART REPLIES';
-        }, Math.max(0, COOLDOWN_MS - (Date.now() - lastRequestTime)));
-      }
-    }
-
-    let _currentSuggestions = [];
-
-    function renderSuggestions(suggestions, usage) {
-      const container = document.getElementById('suggestionsContainer');
-      _currentSuggestions = suggestions;
-
-      let html = '';
-
-      suggestions.forEach((s, i) => {
-        const safeText = s.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        html += `
-        <div class="suggestion-card" data-index="${i}">
-          <div class="suggestion-header">
-            <span class="reply-tag">${(s.label || s.tone).toUpperCase()}</span>
-            <span class="reply-hint">TAP TO COPY</span>
-          </div>
-          <div class="suggestion-text">${safeText}</div>
+  <!-- LIVE DEMO INTERACTIVE SECTION -->
+  <section class="w-full max-w-3xl mx-auto mb-24 scroll-reveal" id="demo">
+    <div class="glass-minimal rounded-3xl p-8 sm:p-10 relative overflow-hidden shadow-2xl border border-white/5 floating">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="font-headline-md text-headline-md font-medium text-on-surface flex items-center gap-3">
+          <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(192,193,255,0.8)]"></div>
+          Interactive Live Demo
+        </h2>
+        <div class="flex items-center gap-2 text-xs font-label-caps tracking-wider text-on-surface-variant">
+          <span class="w-2 h-2 rounded-full bg-status-green" id="apiStatusDot"></span>
+          <span id="apiStatusText">ONLINE</span>
         </div>
-      `;
-      });
+      </div>
 
-      if (usage) {
-        html += `<div style="text-align:center;font-size:11px;color:#acaab1;margin-top:12px;letter-spacing:1px;">
-        TODAY: ${usage.used}/${usage.limit} SUGGESTIONS USED · ${usage.remaining} REMAINING
-      </div>`;
-      }
+      <div class="mb-6">
+        <label class="font-label-caps text-label-caps text-on-surface-variant/70 block mb-2 uppercase tracking-[0.2em]">Incoming Message</label>
+        <textarea id="incomingInput" class="w-full bg-surface-container/50 border border-white/10 rounded-xl p-4 text-on-surface focus:outline-none focus:border-primary/50 transition-colors duration-300 font-body-md resize-none placeholder-on-surface-variant/40" rows="2" placeholder="e.g. Hey! Are we still on for the meeting tomorrow at 10 AM?"></textarea>
+      </div>
 
-      container.innerHTML = html;
+      <div class="mb-8 relative">
+        <button class="w-full bg-primary text-on-primary py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 glow-button transition-all duration-300 hover:pulse-animate uppercase tracking-wider text-sm" id="generate-btn">
+          <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+          <span id="btnText">Generate Smart Replies</span>
+        </button>
+        <div id="errorBox" class="mt-3 text-xs text-error font-medium text-center"></div>
+      </div>
 
-      container.querySelectorAll('.suggestion-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const idx = parseInt(card.dataset.index, 10);
-          copyText(_currentSuggestions[idx].text);
-        });
-      });
-    }
+      <div class="space-y-3" id="ai-responses-container">
+        <label class="font-label-caps text-label-caps text-on-surface-variant/70 block mb-2 uppercase tracking-[0.2em]">AI Suggestions (Click to Copy)</label>
+        <div id="suggestionsList" class="space-y-3">
+          <div class="ai-card-item group flex items-start sm:items-center gap-4 p-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-all duration-300 cursor-pointer" onclick="copyReplyText(this)">
+            <span class="text-xs font-label-caps text-primary uppercase tracking-widest w-24 shrink-0 font-semibold mt-0.5 sm:mt-0">Casual</span>
+            <p class="text-on-surface/90 text-sm font-body-md flex-1">"Yep, still on! Can't wait to hear the new ideas. See ya at 10!"</p>
+            <span class="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary transition-colors">content_copy</span>
+          </div>
+          <div class="ai-card-item group flex items-start sm:items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:border-primary/30 transition-all duration-300 cursor-pointer" onclick="copyReplyText(this)">
+            <span class="text-xs font-label-caps text-on-surface-variant group-hover:text-primary uppercase tracking-widest w-24 shrink-0 font-semibold transition-colors duration-300 mt-0.5 sm:mt-0">Professional</span>
+            <p class="text-on-surface-variant group-hover:text-on-surface text-sm font-body-md transition-colors duration-300 flex-1">"Yes, we are confirmed for 10 AM tomorrow. Looking forward to discussing your new ideas."</p>
+            <span class="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary transition-colors">content_copy</span>
+          </div>
+          <div class="ai-card-item group flex items-start sm:items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:border-primary/30 transition-all duration-300 cursor-pointer" onclick="copyReplyText(this)">
+            <span class="text-xs font-label-caps text-on-surface-variant group-hover:text-primary uppercase tracking-widest w-24 shrink-0 font-semibold transition-colors duration-300 mt-0.5 sm:mt-0">Playful</span>
+            <p class="text-on-surface-variant group-hover:text-on-surface text-sm font-body-md transition-colors duration-300 flex-1">"Ready and waiting! Bring those ideas, coffee's on me."</p>
+            <span class="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary transition-colors">content_copy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    function copyText(text) {
-      navigator.clipboard.writeText(text).catch(() => {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      });
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    }
+  <!-- FEATURES -->
+  <section class="w-full max-w-5xl mx-auto mb-24" id="features">
+    <div class="text-center mb-12 scroll-reveal">
+      <h3 class="font-label-caps text-label-caps text-primary uppercase tracking-[0.25em] mb-2">Designed for Flow</h3>
+      <h2 class="font-headline-xl text-3xl font-bold text-on-surface">Everything built for zero friction</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="flex flex-col items-start gap-4 p-6 rounded-2xl bg-surface-container-low/40 border border-white/5 scroll-reveal">
+        <span class="material-symbols-outlined text-primary text-3xl font-light">chat_bubble</span>
+        <div>
+          <h4 class="font-headline-md text-base text-on-surface mb-2 font-bold">Floating Chat Head</h4>
+          <p class="text-sm text-on-surface-variant leading-relaxed">Persistent messenger-style bubble. Generates replies without switching apps.</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-start gap-4 p-6 rounded-2xl bg-surface-container-low/40 border border-white/5 scroll-reveal" style="transition-delay: 100ms;">
+        <span class="material-symbols-outlined text-primary text-3xl font-light">palette</span>
+        <div>
+          <h4 class="font-headline-md text-base text-on-surface mb-2 font-bold">App-Aware Colors</h4>
+          <p class="text-sm text-on-surface-variant leading-relaxed">The bubble instantly adapts to WhatsApp green, Telegram blue, and Instagram pink.</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-start gap-4 p-6 rounded-2xl bg-surface-container-low/40 border border-white/5 scroll-reveal" style="transition-delay: 200ms;">
+        <span class="material-symbols-outlined text-primary text-3xl font-light">tune</span>
+        <div>
+          <h4 class="font-headline-md text-base text-on-surface mb-2 font-bold">7 Nuanced Tones</h4>
+          <p class="text-sm text-on-surface-variant leading-relaxed">Casual, Professional, Quick, Brief, Gen-Z, Sarcastic, and Playful at a tap.</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-start gap-4 p-6 rounded-2xl bg-surface-container-low/40 border border-white/5 scroll-reveal" style="transition-delay: 300ms;">
+        <span class="material-symbols-outlined text-primary text-3xl font-light">shield_lock</span>
+        <div>
+          <h4 class="font-headline-md text-base text-on-surface mb-2 font-bold">Privacy First</h4>
+          <p class="text-sm text-on-surface-variant leading-relaxed">100% open-source. Messages stay on your device with no trackers or analytics.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    document.getElementById('generateBtn').addEventListener('click', generateSuggestions);
+  <!-- WORKS WITH -->
+  <section class="w-full max-w-4xl mx-auto text-center mb-12 scroll-reveal">
+    <h4 class="font-label-caps text-label-caps text-on-surface-variant/50 mb-8 uppercase tracking-[0.25em]">Works Seamlessly With</h4>
+    <div class="flex flex-wrap justify-center items-center gap-10">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#25D366]"></span>
+        <span class="text-sm font-body-md text-on-surface-variant tracking-wide font-medium">WhatsApp</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#0088cc]"></span>
+        <span class="text-sm font-body-md text-on-surface-variant tracking-wide font-medium">Telegram</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#E1306C]"></span>
+        <span class="text-sm font-body-md text-on-surface-variant tracking-wide font-medium">Instagram</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#4285F4]"></span>
+        <span class="text-sm font-body-md text-on-surface-variant tracking-wide font-medium">Google Messages</span>
+      </div>
+    </div>
+  </section>
+</main>
 
-    textarea.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        generateSuggestions();
+<!-- FOOTER -->
+<footer class="bg-surface-container-lowest/80 backdrop-blur-md w-full py-12 border-t border-white/5 relative z-10 scroll-reveal">
+  <div class="flex flex-col md:flex-row justify-between items-center px-container-padding max-w-7xl mx-auto gap-6 md:gap-0">
+    <div class="text-center md:text-left">
+      <span class="font-headline-md text-lg text-on-surface block mb-1 font-bold">Replyfy</span>
+      <span class="font-body-md text-xs text-on-surface-variant/60">Free & Open-Source Android Assistant.</span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-8">
+      <a class="font-label-caps text-xs text-on-surface-variant/60 hover:text-primary transition-colors tracking-widest uppercase no-underline" href="https://github.com/aryankumarx/replyfy/releases" target="_blank">Releases</a>
+      <a class="font-label-caps text-xs text-on-surface-variant/60 hover:text-primary transition-colors tracking-widest uppercase no-underline" href="https://gitlab.com/fdroid/fdroiddata/-/merge_requests/46056" target="_blank">F-Droid MR</a>
+      <a class="font-label-caps text-xs text-on-surface-variant/60 hover:text-primary transition-colors tracking-widest uppercase no-underline" href="https://github.com/aryankumarx/replyfy/issues" target="_blank">Issues</a>
+      <a class="font-label-caps text-xs text-on-surface-variant/60 hover:text-primary transition-colors tracking-widest uppercase no-underline" href="https://github.com/aryankumarx/replyfy/blob/main/LICENSE" target="_blank">License</a>
+    </div>
+    <div class="text-center md:text-right">
+      <p class="font-body-md text-xs text-on-surface-variant/60 mb-2">Crafted by <a href="https://github.com/aryankumarx" target="_blank" class="text-primary hover:underline">Aryan Kumar</a></p>
+      <div class="flex items-center justify-center md:justify-end gap-4">
+        <a class="text-on-surface-variant/60 hover:text-primary transition-colors flex items-center gap-1.5 text-xs font-label-caps uppercase tracking-wider no-underline" href="https://github.com/aryankumarx/replyfy" target="_blank">
+          <span class="material-symbols-outlined text-[14px]">code</span> GitHub
+        </a>
+        <span class="text-white/10">|</span>
+        <span class="text-on-surface-variant/60 text-xs font-label-caps uppercase tracking-wider">MIT License</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+  const API_URL = window.location.origin;
+
+  // Scroll Reveal Observer
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        obs.unobserve(entry.target);
       }
     });
-  </script>
+  }, { rootMargin: '0px', threshold: 0.1 });
+
+  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+  // Magnetic Links
+  document.querySelectorAll('.magnetic').forEach(link => {
+    link.addEventListener('mousemove', (e) => {
+      const rect = link.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      link.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+    });
+    link.addEventListener('mouseleave', () => {
+      link.style.transform = 'translate(0px, 0px)';
+    });
+  });
+
+  // Parallax subtle background movement
+  document.addEventListener('mousemove', (e) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 20;
+    const y = (e.clientY / window.innerHeight - 0.5) * 20;
+    document.querySelectorAll('.parallax-bg').forEach(el => {
+      el.style.transform = `translate(${x}px, ${y}px)`;
+    });
+  });
+
+  // Health check
+  async function checkHealth() {
+    const dot = document.getElementById('apiStatusDot');
+    const text = document.getElementById('apiStatusText');
+    try {
+      const res = await fetch(`${API_URL}/health`);
+      if (res.ok) {
+        dot.className = 'w-2 h-2 rounded-full bg-status-green';
+        text.textContent = 'ONLINE';
+      } else throw new Error();
+    } catch {
+      dot.className = 'w-2 h-2 rounded-full bg-error';
+      text.textContent = 'OFFLINE';
+    }
+  }
+  checkHealth();
+
+  // Interactive Live Demo
+  let lastRequestTime = 0;
+  const COOLDOWN_MS = 3000;
+
+  const incomingInput = document.getElementById('incomingInput');
+  const generateBtn = document.getElementById('generate-btn');
+  const btnText = document.getElementById('btnText');
+  const errorBox = document.getElementById('errorBox');
+  const suggestionsList = document.getElementById('suggestionsList');
+
+  generateBtn.addEventListener('click', async () => {
+    const message = incomingInput.value.trim() || incomingInput.placeholder.replace('e.g. ', '');
+    const timeSinceLast = Date.now() - lastRequestTime;
+
+    if (timeSinceLast < COOLDOWN_MS) {
+      const waitSec = Math.ceil((COOLDOWN_MS - timeSinceLast) / 1000);
+      errorBox.textContent = `Please wait ${waitSec}s before sending another request.`;
+      return;
+    }
+
+    generateBtn.disabled = true;
+    btnText.innerHTML = '<span class="spinner mr-2"></span> Generating...';
+    errorBox.textContent = '';
+    lastRequestTime = Date.now();
+
+    try {
+      const res = await fetch(`${API_URL}/api/suggest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'my-super-secret-key-12345'
+        },
+        body: JSON.stringify({
+          message,
+          userId: 'web-demo',
+          userTier: 'free'
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate replies');
+
+      renderSuggestions(data.suggestions);
+    } catch (err) {
+      errorBox.textContent = err.message;
+    } finally {
+      setTimeout(() => {
+        generateBtn.disabled = false;
+        btnText.textContent = 'Generate Smart Replies';
+      }, Math.max(0, COOLDOWN_MS - (Date.now() - lastRequestTime)));
+    }
+  });
+
+  function renderSuggestions(suggestions) {
+    if (!suggestions || suggestions.length === 0) return;
+    suggestionsList.innerHTML = '';
+
+    suggestions.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'ai-card-item group flex items-start sm:items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:border-primary/30 transition-all duration-300 cursor-pointer';
+      
+      const safeText = s.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const toneLabel = (s.label || s.tone || 'Reply').toUpperCase();
+
+      card.innerHTML = `
+        <span class="text-xs font-label-caps text-primary uppercase tracking-widest w-24 shrink-0 font-semibold mt-0.5 sm:mt-0">${toneLabel}</span>
+        <p class="text-on-surface/90 text-sm font-body-md flex-1">${safeText}</p>
+        <span class="material-symbols-outlined text-xs text-on-surface-variant/40 group-hover:text-primary transition-colors">content_copy</span>
+      `;
+
+      card.addEventListener('click', () => copyText(s.text));
+      suggestionsList.appendChild(card);
+    });
+  }
+
+  function copyReplyText(element) {
+    const text = element.querySelector('p')?.innerText;
+    if (text) copyText(text.replace(/^"|"$/g, ''));
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    });
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
 
 </body>
-
 </html>

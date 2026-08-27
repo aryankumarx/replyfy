@@ -39,9 +39,13 @@ class ChatAccessibilityService : AccessibilityService() {
             // ===== Emulator testing — remove before release =====
             "com.google.android.apps.messaging",  // Google Messages (default SMS)
             "com.android.messaging",              // AOSP Messages
-            "com.android.chrome",                 // Chrome browser
-            "com.google.android.gm",              // Gmail
-            "com.google.android.apps.nbu.files",  // Files app (to copy text from)
+            "com.android.chrome",                 // Chrome browser (WhatsApp Green)
+            "com.google.android.gm",              // Gmail (Telegram Blue)
+            "com.google.android.apps.nbu.files",  // Files app (Instagram Pink)
+            "com.google.android.deskclock",       // Clock app (Snapchat Yellow)
+            "com.android.deskclock",
+            "com.google.android.calculator",      // Calculator (Discord Blurple)
+            "com.android.calculator2"
         )
     }
 
@@ -64,8 +68,8 @@ class ChatAccessibilityService : AccessibilityService() {
         val isChatApp = CHAT_APPS.contains(packageName)
         Log.d(TAG, "App switched: $packageName → isChatApp=$isChatApp")
 
-        // Direct callback to FloatingBubbleService — much faster and more reliable than broadcasts
-        FloatingBubbleService.onChatAppStateChanged?.invoke(isChatApp)
+        // Direct callback to FloatingBubbleService with active package name
+        FloatingBubbleService.onChatAppChanged?.invoke(if (isChatApp) packageName else null)
     }
 
     override fun onInterrupt() {
