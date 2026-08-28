@@ -35,7 +35,7 @@ const { FloatingBubbleModule } = NativeModules;
 // CONFIG
 // ══════════════════════════════════════════════
 // IMPORTANT: These values are injected from android/local.properties at build time
-const API_URL = 'https://replyfy.onrender.com'; 
+const API_URL = 'https://replyfy.me'; 
 const API_KEY = 'my-super-secret-key-12345'; // Must match backend APP_API_KEY
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
