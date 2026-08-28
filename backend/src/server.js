@@ -19,14 +19,14 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "http://localhost:3000", "https://replyfy.onrender.com"]
+      connectSrc: ["'self'", "http://localhost:3000", "https://replyfy.onrender.com", "https://replyfy.me", "https://www.replyfy.me"]
     }
   }
 }));
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'https://replyfy.onrender.com', 'https://replyfy.me', 'https://www.replyfy.me'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
