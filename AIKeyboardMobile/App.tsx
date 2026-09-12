@@ -35,7 +35,7 @@ const { FloatingBubbleModule } = NativeModules;
 // CONFIG
 // ══════════════════════════════════════════════
 // IMPORTANT: These values are injected from android/local.properties at build time
-const API_URL = 'https://replyfy.me'; 
+const API_URL = 'https://www.replyfy.me'; 
 const API_KEY = 'my-super-secret-key-12345'; // Must match backend APP_API_KEY
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -86,6 +86,10 @@ const App = () => {
       Animated.timing(glowAnim, { toValue: 0.8, duration: 1800, useNativeDriver: true }),
       Animated.timing(glowAnim, { toValue: 0.2, duration: 1800, useNativeDriver: true }),
     ])).start();
+
+    if (typeof FloatingBubbleModule?.setTones === 'function') {
+      FloatingBubbleModule.setTones(ALL_TONES.map(t => t.id));
+    }
   }, []);
 
   const spin = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });

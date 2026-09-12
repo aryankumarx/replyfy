@@ -173,17 +173,15 @@ class FloatingBubbleService : Service() {
                     isSelfCopy = false
                     return@post
                 }
-                if (isInChatApp) {
-                    if (bubbleView != null) {
-                        // Already visible → pulse animation as visual hint
-                        pulseBubble()
-                        Log.d(TAG, "📋 Text copied → bubble pulsed")
-                    } else {
-                        // Was dismissed or removed → re-create it!
-                        showBubble()
-                        pulseBubble()
-                        Log.d(TAG, "📋 Text copied → bubble respawned after dismiss")
-                    }
+                if (bubbleView != null) {
+                    // Always pulse animation as visual hint when text is copied
+                    pulseBubble()
+                    Log.d(TAG, "📋 Text copied → bubble pulsed")
+                } else if (isInChatApp) {
+                    // Was dismissed or removed → re-create it in chat app!
+                    showBubble()
+                    pulseBubble()
+                    Log.d(TAG, "📋 Text copied → bubble respawned after dismiss")
                 }
             }
         }
@@ -726,20 +724,33 @@ class FloatingBubbleService : Service() {
         throw err ?: Exception("Unknown")
     }
 
-    private fun doFetch(msg: String): List<Pair<String, String>> {
-        val c = (URL("$API_URL/api/suggest").openConnection() as HttpURLConnection).apply {
+    private fun doFetch(msg: String, targetUrl: String = "$API_URL/api/suggest", redirectCount: Int = 0): List<Pair<String, String>> {
+        if (redirectCount > 3) throw Exception("Too many redirects")
+        val url = URL(targetUrl)
+        val c = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("x-api-key", API_KEY)
             setRequestProperty("Accept", "application/json")
             connectTimeout = 60000; readTimeout = 60000; doOutput = true
+            instanceFollowRedirects = false
         }
         OutputStreamWriter(c.outputStream).use {
             it.write(JSONObject().apply {
                 put("message", msg); put("userId", "bubble"); put("userTier", "free")
             }.toString()); it.flush()
         }
-        if (c.responseCode != 200) { c.disconnect(); throw Exception("Server ${c.responseCode}") }
+        val code = c.responseCode
+        if (code == 301 || code == 302 || code == 307 || code == 308) {
+            val location = c.getHeaderField("Location")
+            c.disconnect()
+            if (!location.isNullOrEmpty()) {
+                val redirectUrl = if (location.startsWith("http")) location else URL(url, location).toString()
+                Log.d(TAG, "Redirecting ($code) to: $redirectUrl")
+                return doFetch(msg, redirectUrl, redirectCount + 1)
+            }
+        }
+        if (code != 200) { c.disconnect(); throw Exception("Server $code") }
         val b = BufferedReader(InputStreamReader(c.inputStream)).readText(); c.disconnect()
         val a = JSONObject(b).getJSONArray("suggestions")
         val prefs = getSharedPreferences("BubblePrefs", Context.MODE_PRIVATE)
@@ -751,6 +762,12 @@ class FloatingBubbleService : Service() {
             val toneId = o.optString("tone", "")
             // Always show all if none are selected (fallback) or if they match
             if (selectedTones == null || selectedTones.isEmpty() || selectedTones.contains(toneId)) {
+                result.add(Pair(o.getString("label"), o.getString("text")))
+            }
+        }
+        if (result.isEmpty()) {
+            for (i in 0 until a.length()) {
+                val o = a.getJSONObject(i)
                 result.add(Pair(o.getString("label"), o.getString("text")))
             }
         }

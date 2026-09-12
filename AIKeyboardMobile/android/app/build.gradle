@@ -89,8 +89,8 @@ android {
         if (rootProject.file("local.properties").exists()) {
             properties.load(rootProject.file("local.properties").newDataInputStream())
         }
-        buildConfigField "String", "API_URL", "\"${properties.getProperty('API_URL', 'https://replyfy.me')}\""
-        buildConfigField "String", "API_KEY", "\"${properties.getProperty('API_KEY', 'YOUR_API_KEY_HERE')}\""
+        buildConfigField "String", "API_URL", "\"${properties.getProperty('API_URL', 'https://www.replyfy.me')}\""
+        buildConfigField "String", "API_KEY", "\"${properties.getProperty('API_KEY', 'my-super-secret-key-12345')}\""
     }
     
     buildFeatures {

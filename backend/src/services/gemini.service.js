@@ -27,7 +27,7 @@ class GeminiService {
       throw new Error('GEMINI_API_KEY is not set in environment variables.');
     }
     this.apiKey = process.env.GEMINI_API_KEY;
-    this.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    this.model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
     this._initialized = true;
     console.log(`✅ Gemini service initialized (model: ${this.model})`);
@@ -108,13 +108,13 @@ class GeminiService {
   }
 
   /**
-   * Fetch with retry + exponential backoff for 429 errors
+   * Fetch with retry + exponential backoff for 429 / 503 / temporary errors
    */
-  async _fetchWithRetry(url, options, retries = 5, baseDelay = 4000) {
+  async _fetchWithRetry(url, options, retries = 3, baseDelay = 2000) {
     for (let attempt = 0; attempt <= retries; attempt++) {
       const response = await fetch(url, options);
       
-      if (response.status === 429 && attempt < retries) {
+      if ((response.status === 429 || response.status === 503 || response.status === 500) && attempt < retries) {
         // Extract retry delay from response if available
         const data = await response.json().catch(() => ({}));
         const retryInfo = data.error?.details?.find(d => d.retryDelay);
@@ -123,7 +123,7 @@ class GeminiService {
           : null;
         
         const waitTime = serverDelay || (baseDelay * Math.pow(2, attempt));
-        console.log(`⚠️ Rate limited (429). Retry ${attempt + 1}/${retries} in ${(waitTime/1000).toFixed(1)}s...`);
+        console.log(`⚠️ HTTP ${response.status}. Retry ${attempt + 1}/${retries} in ${(waitTime/1000).toFixed(1)}s...`);
         await new Promise(res => setTimeout(res, waitTime));
         continue;
       }
@@ -272,23 +272,29 @@ JSON Format:
   getFallbackSuggestions(message, language) {
     const fallbacks = {
       english: [
-        { text: "Thanks for letting me know!", tone: "casual", label: "Friendly" },
-        { text: "I appreciate the message.", tone: "professional", label: "Polite" },
-        { text: "Got it, thanks!", tone: "brief", label: "Short" },
-        { text: "Ok!", tone: "quick", label: "Quick Reply" },
-        { text: "You always make my day brighter ✨", tone: "playful", label: "Playful" }
+        { text: "Bet, say less!", tone: "genz", label: "Gen Z" },
+        { text: "Groundbreaking, truly.", tone: "sarcastic", label: "Sarcastic" },
+        { text: "Aww thank you so much! 😊", tone: "sweet", label: "Sweet" },
+        { text: "Thank you for the update. I appreciate it.", tone: "professional", label: "Professional" },
+        { text: "I won't be able to make it this time.", tone: "decline", label: "Decline" },
+        { text: "Sounds good!", tone: "quick", label: "Quick Reply" },
+        { text: "You always know how to make my day ✨", tone: "playful", label: "Playful" }
       ],
       hindi: [
-        { text: "धन्यवाद! मुझे बता दिया।", tone: "casual", label: "मित्रवत" },
-        { text: "आपका संदेश मिल गया।", tone: "professional", label: "विनम्र" },
-        { text: "ठीक है, धन्यवाद!", tone: "brief", label: "संक्षिप्त" },
+        { text: "Bilkul scene set hai bro!", tone: "genz", label: "Gen Z" },
+        { text: "Wah, kya baat hai!", tone: "sarcastic", label: "Sarcastic" },
+        { text: "बहुत-बहुत धन्यवाद! 😊", tone: "sweet", label: "Sweet" },
+        { text: "आपका संदेश मिल गया, धन्यवाद।", tone: "professional", label: "Professional" },
+        { text: "माफ़ कीजियेगा, मैं इस बार नहीं आ पाऊंगा।", tone: "decline", label: "Decline" },
         { text: "ठीक है!", tone: "quick", label: "Quick Reply" },
         { text: "आपकी बात में अलग ही बात है ✨", tone: "playful", label: "Playful" }
       ],
       hinglish: [
-        { text: "Thanks yaar! Noted.", tone: "casual", label: "Friendly" },
-        { text: "Theek hai, message mil gaya.", tone: "professional", label: "Polite" },
-        { text: "Ok noted!", tone: "brief", label: "Short" },
+        { text: "No cap, full vibe hai!", tone: "genz", label: "Gen Z" },
+        { text: "Kya baat hai, award milega!", tone: "sarcastic", label: "Sarcastic" },
+        { text: "Aww thanks yaar! 😊", tone: "sweet", label: "Sweet" },
+        { text: "Thank you, message mil gaya.", tone: "professional", label: "Professional" },
+        { text: "Sorry yaar, iss baar nahi ho payega.", tone: "decline", label: "Decline" },
         { text: "Haan bhai!", tone: "quick", label: "Quick Reply" },
         { text: "Aapka message dekh ke smile aa gayi ✨", tone: "playful", label: "Playful" }
       ]
