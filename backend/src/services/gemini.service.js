@@ -35,41 +35,51 @@ class GeminiService {
 
 
   detectLanguage(text) {
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase().trim();
     
     // Check for Devanagari script (proper Hindi)
     const hindiChars = /[\u0900-\u097F]/;
     const hasDevanagari = hindiChars.test(text);
     const hasEnglish = /[a-zA-Z]/.test(text);
     
-    // Common Hindi/Hinglish words written in Roman script
-    const hindiWords = [
-      'hai', 'hain', 'kya', 'kaise', 'kab', 'kahan', 'kyun', 'kyu',
-      'nahi', 'nahin', 'mat', 'mujhe', 'tumhe', 'aapko', 'unko',
-      'bhai', 'yaar', 'dost', 'bro', 'accha', 'achha', 'theek',
-      'thik', 'haan', 'ji', 'aur', 'lekin', 'par', 'magar',
-      'kal', 'aaj', 'abhi', 'baad', 'pehle', 'phir',
-      'milte', 'milenge', 'chalte', 'chalo', 'chal', 'batao',
-      'bata', 'bol', 'bolo', 'sun', 'suno', 'dekho', 'dekh',
-      'kaisa', 'kaisi', 'kuch', 'bohot', 'bahut', 'zyada',
-      'kam', 'sab', 'koi', 'woh', 'yeh', 'tum', 'hum', 'main',
-      'mera', 'tera', 'uska', 'apna', 'khana', 'jana', 'aana',
-      'karna', 'hoga', 'hogi', 'raha', 'rahi', 'wala', 'wali',
-      'shukriya', 'dhanyavaad', 'namaste', 'padhna', 'likhna',
-      'samajh', 'pata', 'lagta', 'lagti', 'bilkul', 'pakka',
-      'matlab', 'scene', 'scene kya hai', 'arre', 'oye', 'chup'
-    ];
-    
-    // Count how many Hindi words appear in the text
-    const words = lowerText.split(/\s+/);
-    const hindiWordCount = words.filter(w => hindiWords.includes(w.replace(/[.,!?]/g, ''))).length;
-    const hindiRatio = hindiWordCount / Math.max(words.length, 1);
+    // Common Hindi/Hinglish words written in Roman script (excluding pure English words like 'are', 'to', 'me')
+    const hindiWords = new Set([
+      'hai', 'hain', 'hnn', 'haan', 'han', 'haa', 'kya', 'kyaaa', 'kaise', 'kese', 'kaisa', 'kaisi',
+      'kab', 'kahan', 'kaha', 'kidhar', 'kdr', 'idhar', 'udhar', 'kyun', 'kyu', 'kyuu', 'nahi', 'nahin', 'nhi',
+      'naa', 'mat', 'mujhe', 'mjhe', 'tumhe', 'tmhe', 'aapko', 'apko', 'unko', 'isko', 'usko', 'sabko', 'kisko',
+      'bhai', 'bhaiya', 'bhaii', 'yaar', 'yr', 'dost', 'accha', 'achha', 'acha', 'theek', 'thik', 'thk', 'sahi',
+      'galat', 'mast', 'badhiya', 'aur', 'lekin', 'magar', 'kal', 'aaj', 'aj', 'abhi', 'abhie', 'baad',
+      'pehle', 'phir', 'fir', 'milte', 'milenge', 'milna', 'chalte', 'chalo', 'chal', 'chaloge', 'chale', 'aao', 'aaja',
+      'aana', 'jaa', 'jana', 'jaoge', 'batao', 'bata', 'btao', 'bolo', 'suno', 'dekho', 'dekh', 'dekha',
+      'kuch', 'kch', 'bohot', 'bahut', 'bht', 'zyada', 'jyada', 'woh', 'yeh',
+      'tum', 'tumhara', 'tumhari', 'hum', 'hamara', 'main', 'mai', 'mera', 'meri', 'mere', 'tera', 'teri', 'tere',
+      'uska', 'uski', 'uske', 'apna', 'apni', 'apne', 'khana', 'peena', 'karna', 'karo', 'karega', 'karegi',
+      'hoga', 'hogi', 'honge', 'raha', 'rahi', 'rahe', 'rha', 'rhi', 'rhe', 'wala', 'wali', 'wale', 'shukriya',
+      'dhanyavaad', 'namaste', 'samajh', 'smjh', 'pata', 'pta', 'lagta', 'lagti', 'bilkul', 'pakka', 'matlab', 'mtlb',
+      'scene', 'arre', 'arrey', 'arey', 'oye', 'chup', 'chahiye', 'sirf', 'toh', 'bhi', 'mein',
+      'vibe', 'haal', 'sachi', 'sach'
+    ]);
     
     if (hasDevanagari && hasEnglish) return 'hinglish';
     if (hasDevanagari) return 'hindi';
     
-    // If 20%+ of words are Hindi (written in Roman), it's Hinglish
-    if (hindiRatio >= 0.2) return 'hinglish';
+    // Check words in text
+    const words = lowerText.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 'english';
+
+    let hindiWordCount = 0;
+    for (const w of words) {
+      if (hindiWords.has(w)) {
+        hindiWordCount++;
+      }
+    }
+    
+    const hindiRatio = hindiWordCount / words.length;
+    
+    // If text has any Hindi word in short messages, or >= 15% in longer messages
+    if (hindiWordCount >= 1 && (words.length <= 4 || hindiRatio >= 0.15)) {
+      return 'hinglish';
+    }
     
     return 'english';
   }
@@ -169,39 +179,42 @@ class GeminiService {
     // Build a strong language instruction
     let langInstruction;
     if (language === 'hinglish') {
-      langInstruction = `CRITICAL: The user is writing in Hinglish (mix of Hindi + English using Roman script).
-You MUST reply in the SAME Hinglish style. Mix Hindi and English words naturally.
-Example Hinglish replies: "Haan bhai, done!", "Theek hai, kal milte hain", "Sure yaar, no problem!"
-Do NOT reply in pure English. Match the user's language style exactly.`;
+      langInstruction = `CRITICAL LANGUAGE REQUIREMENT:
+The incoming message is in Hinglish (Hindi words mixed with English in Roman / English alphabets).
+ALL 7 REPLY SUGGESTIONS MUST BE 100% IN NATURAL HINGLISH (Roman script).
+Do NOT reply in pure English. Use natural Desi texting words (e.g., "haan bhai", "chalega yaar", "scene set hai", "aaj nahi ho payega", "theek hai").`;
     } else if (language === 'hindi') {
-      langInstruction = `CRITICAL: The user is writing in Hindi.
-You MUST reply in Hindi (Devanagari script).
-Example: "हाँ भाई, ठीक है!", "कल मिलते हैं"
-NEVER reply in English.`;
+      langInstruction = `CRITICAL LANGUAGE REQUIREMENT:
+The incoming message is in Hindi (Devanagari script).
+ALL 7 REPLY SUGGESTIONS MUST BE IN NATURAL HINDI (Devanagari script).
+Do NOT reply in English.`;
     } else {
-      langInstruction = 'Reply in English.';
+      langInstruction = 'Language: Reply in English, matching the conversational language of the incoming message.';
     }
 
-    const prompt = `${contextStr}User received this message: "${userMessage}"
+    const prompt = `${contextStr}User received this text message: "${userMessage}"
 
 ${langInstruction}
 
-Generate exactly 7 reply suggestions STRICTLY IN THE LANGUAGE REQUESTED ABOVE, with distinctly different, highly expressive personalities:
-1. Gen Z - Speak fluent Gen Z internet slang. Use modern abbreviations naturally.
-2. Sarcastic - Provide a witty comeback with a hint of dry sarcasm. Keep it playful.
-3. Sweet - Warm and affectionate.
-4. Professional - Polished, business-appropriate, and formally courteous.
-5. Decline - Politely disagree, say no to a plan, or express disagreement with the statement.
-6. Quick Reply - Respond in the shortest way physically possible. Maximum 5 words.
-7. Playful - Flirty, poetic, Shayari, or romantic in a distinct Shayari/rizz style.
+You are an expert messaging assistant generating ultra-human, realistic chat suggestions for WhatsApp/Instagram.
+Generate exactly 7 distinct reply suggestions matching the specified language:
 
-IMPORTANT RULES & NO CONTEXT HANDLER:
-- Write exactly like a real person texting from a phone.
-- Use emojis ONLY when absolutely natural. Do not force emojis into every sentence.
-- NO unnecessary punctuation. Real people text naturally without periods.
-- CRITICAL: Match the EXACT language of the incoming message. IF requested in Hindi or Hinglish, EVERY SINGLE tone (Gen Z, Professional, etc.) MUST be written in that language.
-- If the received message is extremely short (like "ok", "hi") or lacks context, do NOT invent fake stories. Simply respond with realistic conversational fillers (e.g. "what's up?", "and?", "huh?").
-- Output ONLY the JSON array.
+1. Gen Z: Effortless modern slang, lowercase vibe, nonchalant (e.g. "bet", "lowkey real", "scene sorted hai bro", "full vibe").
+2. Sarcastic: Witty, playful banter, dry humor, light teasing.
+3. Sweet: Warm, genuine, polite, caring.
+4. Professional: Courteous, articulate, well-mannered.
+5. Decline: Natural, polite way to say no or disagree.
+6. Quick Reply: Extremely short, punchy (1 to 4 words max).
+7. Playful: Charming, witty, flirtatious/romantic rizz or poetic shayari vibe.
+
+HUMANIZATION & TEXTING GUIDELINES:
+- Write exactly how real humans text their friends/colleagues on mobile.
+- Use emojis only when natural (0 or 1 per suggestion).
+- Avoid ending casual texts with periods — real people do not put full stops on short texts.
+- If the incoming message is simple or short (e.g. "kya haal", "hi", "kaisa hai"), give natural conversational replies without making up fake complex stories.
+- STRICT RULE: Every single suggestion MUST be in the target language (Hinglish/Hindi/English).
+
+Output ONLY a valid JSON array of objects.
 
 JSON Format:
 [{"text":"...","tone":"genz","label":"Gen Z"}, {"text":"...","tone":"sarcastic","label":"Sarcastic"}, {"text":"...","tone":"sweet","label":"Sweet"}, {"text":"...","tone":"professional","label":"Professional"}, {"text":"...","tone":"decline","label":"Decline"}, {"text":"...","tone":"quick","label":"Quick Reply"}, {"text":"...","tone":"playful","label":"Playful"}]`;
