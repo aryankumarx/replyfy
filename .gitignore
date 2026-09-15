@@ -112,5 +112,4 @@ quickstart.sh
 **/list_models.js
 **/list_output.txt
 
-# Gradle properties (contains keystore passwords!)
-**/gradle.properties
+

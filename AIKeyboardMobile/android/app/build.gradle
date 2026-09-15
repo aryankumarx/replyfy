@@ -104,10 +104,12 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(project.property('REPLYFY_RELEASE_STORE_FILE'))
-            storePassword project.property('REPLYFY_RELEASE_STORE_PASSWORD')
-            keyAlias project.property('REPLYFY_RELEASE_KEY_ALIAS')
-            keyPassword project.property('REPLYFY_RELEASE_KEY_PASSWORD')
+            if (project.hasProperty('REPLYFY_RELEASE_STORE_FILE')) {
+                storeFile file(project.property('REPLYFY_RELEASE_STORE_FILE'))
+                storePassword project.property('REPLYFY_RELEASE_STORE_PASSWORD')
+                keyAlias project.property('REPLYFY_RELEASE_KEY_ALIAS')
+                keyPassword project.property('REPLYFY_RELEASE_KEY_PASSWORD')
+            }
         }
     }
     buildTypes {
