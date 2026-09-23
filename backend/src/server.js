@@ -10,6 +10,9 @@ const suggestRoute = require('./routes/suggest');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust reverse proxy (Vercel / Cloudflare) so rate limiting uses real client IP
+app.set('trust proxy', 1);
+
 // Security middleware (relaxed for web demo)
 app.use(helmet({
   contentSecurityPolicy: {
