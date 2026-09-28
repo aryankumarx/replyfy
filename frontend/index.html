@@ -299,6 +299,66 @@
     </div>
   </div>
 
+  <!-- INTERACTIVE VECTOR CHARACTER STAGE (Jeff Broderick / Zoah Style) -->
+  <div class="w-full max-w-4xl mx-auto mb-20 scroll-reveal">
+    <div class="glass-minimal rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-primary/20 shadow-[0_10px_40px_rgba(128,131,255,0.08)]">
+      
+      <!-- Top Bar: Design Tool HUD -->
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-white/5 text-xs font-label-caps tracking-wider text-on-surface-variant/70">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container border border-white/5 text-primary">
+            <span class="material-symbols-outlined text-[14px]">polyline</span>
+            <span>BEZIER VECTOR ENGINE</span>
+          </div>
+          <span class="hidden sm:inline text-white/20">|</span>
+          <span class="hidden sm:inline text-on-surface-variant/50">ZOAH ORGANIC CHARACTER</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-status-green animate-ping"></span>
+            <span class="text-status-green font-semibold">TRACKING CURSOR</span>
+          </div>
+          <button id="toggleNodesBtn" class="px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high border border-white/10 text-on-surface text-[11px] transition-colors">
+            Toggle Nodes
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Viewport -->
+      <div class="relative w-full h-[360px] sm:h-[420px] rounded-2xl bg-surface-container-lowest/90 border border-white/5 flex items-center justify-center overflow-hidden cursor-crosshair group select-none">
+        
+        <!-- Subtle Blueprint Grid Pattern -->
+        <div class="absolute inset-0 opacity-[0.07] pointer-events-none" style="background-image: linear-gradient(#c0c1ff 1px, transparent 1px), linear-gradient(90deg, #c0c1ff 1px, transparent 1px); background-size: 32px 32px;"></div>
+        
+        <!-- Live Coordinate HUD Overlay -->
+        <div class="absolute top-4 left-4 font-mono text-[10px] text-primary/60 space-y-1 pointer-events-none">
+          <div id="hudCoords">X: 0.00 | Y: 0.00</div>
+          <div id="hudAngle">ROT: 0° | BEZIER NODES: 28</div>
+        </div>
+        
+        <div class="absolute bottom-4 right-4 font-mono text-[10px] text-on-surface-variant/40 pointer-events-none">
+          Click character to interact · Move cursor to orbit
+        </div>
+
+        <canvas id="vectorCharacterCanvas" class="w-full h-full relative z-10"></canvas>
+      </div>
+
+      <!-- Bottom Status Badges -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mt-4 pt-2 text-[11px] font-label-caps text-on-surface-variant/50">
+        <div class="flex items-center gap-4">
+          <span>STYLE: PLAYFUL ORGANIC</span>
+          <span>•</span>
+          <span>SHADER: HATCHED VECTOR</span>
+          <span>•</span>
+          <span>PALETTE: REPLYFY NEON</span>
+        </div>
+        <div class="text-primary font-medium">
+          INTERACTIVE 3D PROJECTION
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- LIVE DEMO INTERACTIVE SECTION -->
   <section class="w-full max-w-3xl mx-auto mb-24 scroll-reveal" id="demo">
     <div class="glass-minimal rounded-3xl p-8 sm:p-10 relative overflow-hidden shadow-2xl border border-white/5 floating">
@@ -587,6 +647,313 @@
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
   }
+
+  // ==========================================
+  // ZOAH-STYLE VECTOR CHARACTER ENGINE
+  // ==========================================
+  (function initVectorCharacter() {
+    const canvas = document.getElementById('vectorCharacterCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const hudCoords = document.getElementById('hudCoords');
+    const hudAngle = document.getElementById('hudAngle');
+    const toggleNodesBtn = document.getElementById('toggleNodesBtn');
+
+    let showNodes = true;
+    let width = 0, height = 0;
+    let dpr = window.devicePixelRatio || 1;
+
+    // Interaction & Animation State
+    let mouse = { x: 0, y: 0, targetX: 0, targetY: 0, isHover: false };
+    let rotX = 0, rotY = 0.25; // default 3/4 perspective
+    let targetRotX = 0, targetRotY = 0.25;
+    let blinkProgress = 0; // 0 = open, 1 = closed
+    let isBlinking = false;
+    let squishScaleX = 1, squishScaleY = 1;
+    let squishVelX = 0, squishVelY = 0;
+    let shockwaveRadius = 0;
+    let shockwaveAlpha = 0;
+
+    toggleNodesBtn?.addEventListener('click', () => {
+      showNodes = !showNodes;
+      toggleNodesBtn.textContent = showNodes ? 'Hide Nodes' : 'Show Nodes';
+      toggleNodesBtn.classList.toggle('text-primary', showNodes);
+    });
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse / Touch tracking relative to canvas center
+    function handlePointer(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const nx = ((clientX - rect.left) / width - 0.5) * 2;
+      const ny = ((clientY - rect.top) / height - 0.5) * 2;
+      mouse.targetX = Math.max(-1.5, Math.min(1.5, nx));
+      mouse.targetY = Math.max(-1.5, Math.min(1.5, ny));
+    }
+
+    window.addEventListener('mousemove', (e) => handlePointer(e.clientX, e.clientY));
+    canvas.addEventListener('touchmove', (e) => {
+      if (e.touches[0]) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    // Click to trigger bouncy squish jump
+    canvas.addEventListener('click', () => {
+      squishScaleX = 1.35;
+      squishScaleY = 0.65;
+      isBlinking = true;
+      blinkProgress = 1;
+      shockwaveRadius = 20;
+      shockwaveAlpha = 0.8;
+    });
+
+    // Random blinking schedule
+    function scheduleBlink() {
+      setTimeout(() => {
+        isBlinking = true;
+        setTimeout(() => {
+          isBlinking = false;
+          scheduleBlink();
+        }, 160);
+      }, 2500 + Math.random() * 3500);
+    }
+    scheduleBlink();
+
+    // 3D Projection Helper (Spherical map)
+    function project3D(x, y, z, radius, cx, cy) {
+      // Rotate around Y (yaw)
+      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      const x1 = x * cosY + z * sinY;
+      const z1 = -x * sinY + z * cosY;
+
+      // Rotate around X (pitch)
+      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+      const y2 = y * cosX - z1 * sinX;
+      const z2 = y * sinX + z1 * cosX;
+
+      const scale = 380 / (380 + z2);
+      return {
+        x: cx + x1 * scale,
+        y: cy + y2 * scale,
+        scale,
+        visible: z2 > -radius * 0.95
+      };
+    }
+
+    // Draw chunky rounded blob character eye/letterform
+    function drawPillEye(cx, cy, baseWidth, baseHeight, angle, blinkFactor, isRight) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      
+      const w = baseWidth * squishScaleX;
+      const h = baseHeight * Math.max(0.08, 1 - blinkFactor * 0.92) * squishScaleY;
+      const r = Math.min(w, h) / 2;
+
+      // Build organic rounded rectangle path using Bezier curves
+      ctx.beginPath();
+      ctx.moveTo(-w/2 + r, -h/2);
+      ctx.lineTo(w/2 - r, -h/2);
+      ctx.bezierCurveTo(w/2, -h/2, w/2, -h/2 + r, w/2, -h/2 + r);
+      ctx.lineTo(w/2, h/2 - r);
+      ctx.bezierCurveTo(w/2, h/2, w/2 - r, h/2, w/2 - r, h/2);
+      ctx.lineTo(-w/2 + r, h/2);
+      ctx.bezierCurveTo(-w/2, h/2, -w/2, h/2 - r, -w/2, h/2 - r);
+      ctx.lineTo(-w/2, -h/2 + r);
+      ctx.bezierCurveTo(-w/2, -h/2, -w/2 + r, -h/2, -w/2 + r, -h/2);
+      ctx.closePath();
+
+      // Clip and draw Hatching pattern (Zoah aesthetic)
+      ctx.save();
+      ctx.clip();
+      
+      // Soft ambient base fill
+      const grad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
+      grad.addColorStop(0, 'rgba(192, 193, 255, 0.25)');
+      grad.addColorStop(1, 'rgba(128, 131, 255, 0.15)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Diagonal Hatch Lines
+      ctx.strokeStyle = 'rgba(192, 193, 255, 0.45)';
+      ctx.lineWidth = 1.2;
+      const step = 6;
+      for (let x = -w - h; x < w + h; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, -h);
+        ctx.lineTo(x + h * 2, h);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Outer Bezier stroke
+      ctx.strokeStyle = '#c0c1ff';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // Draw Vector Construction Nodes & Handles (if enabled)
+      if (showNodes) {
+        const nodes = [
+          { x: -w/2 + r, y: -h/2 },
+          { x: 0, y: -h/2 },
+          { x: w/2 - r, y: -h/2 },
+          { x: w/2, y: -h/2 + r },
+          { x: w/2, y: 0 },
+          { x: w/2, y: h/2 - r },
+          { x: w/2 - r, y: h/2 },
+          { x: 0, y: h/2 },
+          { x: -w/2 + r, y: h/2 },
+          { x: -w/2, y: h/2 - r },
+          { x: -w/2, y: 0 },
+          { x: -w/2, y: -h/2 + r }
+        ];
+
+        nodes.forEach((pt, i) => {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = (i % 3 === 0) ? '#4edea3' : '#c0c1ff';
+          ctx.fill();
+          ctx.strokeStyle = '#131319';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+      }
+
+      ctx.restore();
+    }
+
+    // Main animation loop
+    let time = 0;
+    function render() {
+      time += 0.02;
+
+      // Smooth camera orbit spring
+      targetRotY = mouse.targetX * 0.65;
+      targetRotX = -mouse.targetY * 0.45;
+      rotY += (targetRotY - rotY) * 0.08;
+      rotX += (targetRotX - rotX) * 0.08;
+
+      // Squish spring physics
+      const k = 0.15; // spring constant
+      const d = 0.78; // damping
+      squishVelX += (1 - squishScaleX) * k;
+      squishVelY += (1 - squishScaleY) * k;
+      squishVelX *= d;
+      squishVelY *= d;
+      squishScaleX += squishVelX;
+      squishScaleY += squishVelY;
+
+      // Blink animation interpolation
+      if (isBlinking) {
+        blinkProgress = Math.min(1, blinkProgress + 0.25);
+      } else {
+        blinkProgress = Math.max(0, blinkProgress - 0.2);
+      }
+
+      // Update HUD
+      if (hudCoords) hudCoords.textContent = `X: ${mouse.targetX.toFixed(2)} | Y: ${(-mouse.targetY).toFixed(2)}`;
+      if (hudAngle) hudAngle.textContent = `ROT Y: ${(rotY * 57.3).toFixed(1)}° | ROT X: ${(rotX * 57.3).toFixed(1)}°`;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const sphereRadius = Math.min(width, height) * 0.36;
+
+      // Draw Click Shockwave Ring
+      if (shockwaveAlpha > 0.01) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, shockwaveRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(192, 193, 255, ${shockwaveAlpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        shockwaveRadius += 3.5;
+        shockwaveAlpha *= 0.92;
+      }
+
+      // 1. Draw Outer 3D Wireframe Sphere (Dashed lines, Zoah blueprint)
+      ctx.save();
+      
+      // Outer sphere boundary
+      ctx.beginPath();
+      ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(128, 131, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Latitude wireframe (Equator ellipse)
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, sphereRadius, Math.abs(Math.sin(rotX) * sphereRadius), rotY * 0.1, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(192, 193, 255, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+
+      // Longitude wireframe (Meridian ellipse)
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, Math.abs(Math.cos(rotY) * sphereRadius), sphereRadius, rotX * 0.1, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(192, 193, 255, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.restore();
+
+      // 2. Position and Project the Two Chunky Eyes on the Sphere Surface
+      const eyeOffset = 38;
+      const eyeZ = Math.cos(rotY) * 60;
+      const eyeTilt = rotY * 0.3;
+
+      // Left Eye
+      const pLeft = project3D(-eyeOffset, Math.sin(time * 1.5) * 4, sphereRadius * 0.75, sphereRadius, cx, cy);
+      // Right Eye
+      const pRight = project3D(eyeOffset, Math.sin(time * 1.5 + 0.3) * 4, sphereRadius * 0.75, sphereRadius, cx, cy);
+
+      const eyeWidth = 32;
+      const eyeHeight = 72;
+
+      if (pLeft.visible) {
+        drawPillEye(pLeft.x, pLeft.y, eyeWidth * pLeft.scale, eyeHeight * pLeft.scale, eyeTilt, blinkProgress, false);
+      }
+      if (pRight.visible) {
+        drawPillEye(pRight.x, pRight.y, eyeWidth * pRight.scale, eyeHeight * pRight.scale, eyeTilt, blinkProgress, true);
+      }
+
+      // 3. Draw Center Vector Construction Axis Line
+      if (showNodes) {
+        ctx.beginPath();
+        ctx.moveTo(pLeft.x, pLeft.y);
+        ctx.lineTo(pRight.x, pRight.y);
+        ctx.strokeStyle = 'rgba(78, 222, 163, 0.4)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Center mid-point node
+        const midX = (pLeft.x + pRight.x) / 2;
+        const midY = (pLeft.y + pRight.y) / 2;
+        ctx.beginPath();
+        ctx.arc(midX, midY, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#4edea3';
+        ctx.fill();
+      }
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  })();
 </script>
 
 </body>
