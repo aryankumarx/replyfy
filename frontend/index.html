@@ -225,6 +225,51 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* Zoah Vector Character Animation */
+    .zoah-container {
+      perspective: 1000px;
+      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+    .zoah-card {
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+      animation: zoahFloat 6s ease-in-out infinite;
+    }
+    @keyframes zoahFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(1.5deg); }
+    }
+    .zoah-orbit-meridian {
+      animation: meridianOrbit 12s ease-in-out infinite;
+      transform-origin: 150px 150px;
+    }
+    @keyframes meridianOrbit {
+      0%, 100% { rx: 42px; transform: rotate(0deg); }
+      50% { rx: 78px; transform: rotate(8deg); }
+    }
+    .bezier-node {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: center;
+    }
+    .zoah-card:hover .bezier-node {
+      r: 3.2;
+      stroke-width: 1.8;
+      filter: drop-shadow(0 0 4px rgba(192, 193, 255, 0.9));
+    }
+    .zoah-character-capsule {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .zoah-card:hover .zoah-character-capsule {
+      transform: scale(1.04);
+    }
+    @keyframes zoahBlink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.1); }
+    }
+    .zoah-eye-blink {
+      transform-origin: 175px 145px;
+      animation: zoahBlink 4.5s ease-in-out infinite;
+    }
     .spinner {
       display: inline-block;
       width: 14px;
@@ -297,63 +342,104 @@
         GitHub
       </a>
     </div>
-  </div>
 
-  <!-- INTERACTIVE VECTOR CHARACTER STAGE (Jeff Broderick / Zoah Style) -->
-  <div class="w-full max-w-4xl mx-auto mb-20 scroll-reveal">
-    <div class="glass-minimal rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-primary/20 shadow-[0_10px_40px_rgba(128,131,255,0.08)]">
-      
-      <!-- Top Bar: Design Tool HUD -->
-      <div class="flex flex-wrap items-center justify-between gap-4 pb-4 mb-4 border-b border-white/5 text-xs font-label-caps tracking-wider text-on-surface-variant/70">
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container border border-white/5 text-primary">
-            <span class="material-symbols-outlined text-[14px]">polyline</span>
-            <span>BEZIER VECTOR ENGINE</span>
-          </div>
-          <span class="hidden sm:inline text-white/20">|</span>
-          <span class="hidden sm:inline text-on-surface-variant/50">ZOAH ORGANIC CHARACTER</span>
+    <!-- ZOAH VECTOR CHARACTER ANIMATION (Middle-Right of Hero) -->
+    <div class="zoah-container lg:absolute lg:right-0 xl:-right-16 lg:bottom-4 xl:bottom-8 mt-12 lg:mt-0 flex flex-col items-center justify-center fade-in-up delay-300 z-20" id="zoahWidget">
+      <div class="zoah-card glass-minimal border border-primary/20 rounded-3xl p-5 shadow-[0_8px_32px_rgba(128,131,255,0.15)] relative overflow-hidden backdrop-blur-xl group cursor-pointer" id="zoahCard">
+        <!-- Ambient corner accents -->
+        <div class="absolute top-2 left-3 flex items-center gap-1.5 opacity-60 text-[10px] font-label-caps tracking-widest text-primary">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+          <span>VECTOR // 3D BEZIER</span>
         </div>
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-status-green animate-ping"></span>
-            <span class="text-status-green font-semibold">TRACKING CURSOR</span>
-          </div>
-          <button id="toggleNodesBtn" class="px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high border border-white/10 text-on-surface text-[11px] transition-colors">
-            Toggle Nodes
-          </button>
-        </div>
-      </div>
-
-      <!-- Canvas Viewport -->
-      <div class="relative w-full h-[360px] sm:h-[420px] rounded-2xl bg-surface-container-lowest/90 border border-white/5 flex items-center justify-center overflow-hidden cursor-crosshair group select-none">
-        
-        <!-- Subtle Blueprint Grid Pattern -->
-        <div class="absolute inset-0 opacity-[0.07] pointer-events-none" style="background-image: linear-gradient(#c0c1ff 1px, transparent 1px), linear-gradient(90deg, #c0c1ff 1px, transparent 1px); background-size: 32px 32px;"></div>
-        
-        <!-- Live Coordinate HUD Overlay -->
-        <div class="absolute top-4 left-4 font-mono text-[10px] text-primary/60 space-y-1 pointer-events-none">
-          <div id="hudCoords">X: 0.00 | Y: 0.00</div>
-          <div id="hudAngle">ROT: 0° | BEZIER NODES: 28</div>
-        </div>
-        
-        <div class="absolute bottom-4 right-4 font-mono text-[10px] text-on-surface-variant/40 pointer-events-none">
-          Click character to interact · Move cursor to orbit
+        <div class="absolute top-2 right-3 opacity-40 text-[9px] font-mono text-on-surface-variant">
+          P1 [150, 150]
         </div>
 
-        <canvas id="vectorCharacterCanvas" class="w-full h-full relative z-10"></canvas>
-      </div>
+        <svg viewBox="0 0 300 300" class="w-56 h-56 sm:w-64 sm:h-64 transition-transform duration-300" id="zoahSvg">
+          <defs>
+            <!-- Diagonal Hatching Pattern -->
+            <pattern id="zoahHatch" width="7" height="7" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="7" stroke="#c0c1ff" stroke-width="1.3" opacity="0.45" />
+            </pattern>
+            <!-- Soft Neon Glow -->
+            <filter id="zoahGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
 
-      <!-- Bottom Status Badges -->
-      <div class="flex flex-wrap items-center justify-between gap-2 mt-4 pt-2 text-[11px] font-label-caps text-on-surface-variant/50">
-        <div class="flex items-center gap-4">
-          <span>STYLE: PLAYFUL ORGANIC</span>
-          <span>•</span>
-          <span>SHADER: HATCHED VECTOR</span>
-          <span>•</span>
-          <span>PALETTE: REPLYFY NEON</span>
-        </div>
-        <div class="text-primary font-medium">
-          INTERACTIVE 3D PROJECTION
+          <!-- Outer Wireframe Sphere Grid -->
+          <circle cx="150" cy="150" r="108" fill="none" stroke="rgba(192, 193, 255, 0.35)" stroke-width="1.5" />
+          
+          <!-- Horizontal Equator Axis -->
+          <ellipse cx="150" cy="150" rx="108" ry="24" fill="none" stroke="rgba(192, 193, 255, 0.3)" stroke-width="1" stroke-dasharray="4 4" />
+          
+          <!-- Secondary Latitude Ellipse -->
+          <ellipse cx="150" cy="120" rx="90" ry="18" fill="none" stroke="rgba(192, 193, 255, 0.15)" stroke-width="0.8" stroke-dasharray="3 3" />
+          
+          <!-- Orbiting Vertical Meridian -->
+          <ellipse cx="150" cy="150" rx="46" ry="108" fill="none" stroke="rgba(192, 193, 255, 0.35)" stroke-width="1.2" stroke-dasharray="4 4" class="zoah-orbit-meridian" />
+
+          <!-- Center Guide Crosshairs -->
+          <line x1="140" y1="150" x2="160" y2="150" stroke="rgba(192, 193, 255, 0.3)" stroke-width="1" />
+          <line x1="150" y1="140" x2="150" y2="160" stroke="rgba(192, 193, 255, 0.3)" stroke-width="1" />
+
+          <!-- Chunky Zoah Vector Characters (Rounded Blobs / Letterforms) -->
+          <g id="zoahEyesGroup" class="zoah-eye-blink">
+            <!-- Left Chunky Capsule -->
+            <g class="zoah-character-capsule" id="leftCapsule">
+              <!-- Filled Hatched Body -->
+              <rect x="145" y="96" width="38" height="92" rx="19" fill="url(#zoahHatch)" stroke="#c0c1ff" stroke-width="2.2" filter="url(#zoahGlow)" />
+              
+              <!-- Bezier Tangent Handles -->
+              <line x1="145" y1="115" x2="145" y2="169" stroke="rgba(192, 193, 255, 0.5)" stroke-width="0.8" stroke-dasharray="2 2" />
+              <line x1="183" y1="115" x2="183" y2="169" stroke="rgba(192, 193, 255, 0.5)" stroke-width="0.8" stroke-dasharray="2 2" />
+
+              <!-- Outer Bezier Control Points / Nodes -->
+              <!-- Top Arc Nodes -->
+              <circle class="bezier-node" cx="145" cy="115" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="164" cy="96" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="183" cy="115" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <!-- Side Nodes -->
+              <circle class="bezier-node" cx="145" cy="142" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="183" cy="142" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <!-- Bottom Arc Nodes -->
+              <circle class="bezier-node" cx="145" cy="169" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="164" cy="188" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="183" cy="169" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+            </g>
+
+            <!-- Right Chunky Capsule (Perspective Offset) -->
+            <g class="zoah-character-capsule" id="rightCapsule">
+              <!-- Filled Hatched Body -->
+              <rect x="195" y="105" width="30" height="76" rx="15" fill="url(#zoahHatch)" stroke="#c0c1ff" stroke-width="2.2" filter="url(#zoahGlow)" />
+              
+              <!-- Bezier Tangent Handles -->
+              <line x1="195" y1="120" x2="195" y2="166" stroke="rgba(192, 193, 255, 0.5)" stroke-width="0.8" stroke-dasharray="2 2" />
+              <line x1="225" y1="120" x2="225" y2="166" stroke="rgba(192, 193, 255, 0.5)" stroke-width="0.8" stroke-dasharray="2 2" />
+
+              <!-- Outer Bezier Control Points / Nodes -->
+              <circle class="bezier-node" cx="195" cy="120" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="210" cy="105" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="225" cy="120" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <!-- Side Nodes -->
+              <circle class="bezier-node" cx="195" cy="143" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="225" cy="143" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <!-- Bottom Arc Nodes -->
+              <circle class="bezier-node" cx="195" cy="166" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="210" cy="181" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+              <circle class="bezier-node" cx="225" cy="166" r="2.5" fill="#0e0e14" stroke="#c0c1ff" stroke-width="1.4" />
+            </g>
+          </g>
+        </svg>
+
+        <!-- Bottom Status Bar -->
+        <div class="flex items-center justify-between mt-1 text-[11px] text-on-surface-variant/80 font-mono border-t border-white/5 pt-2">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px] text-primary">polyline</span>
+            <span>Organic Bezier</span>
+          </span>
+          <span class="text-primary font-semibold tracking-wide">ZOAH // CHAR</span>
         </div>
       </div>
     </div>
@@ -648,312 +734,51 @@
     setTimeout(() => toast.classList.remove('show'), 2000);
   }
 
-  // ==========================================
-  // ZOAH-STYLE VECTOR CHARACTER ENGINE
-  // ==========================================
-  (function initVectorCharacter() {
-    const canvas = document.getElementById('vectorCharacterCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const hudCoords = document.getElementById('hudCoords');
-    const hudAngle = document.getElementById('hudAngle');
-    const toggleNodesBtn = document.getElementById('toggleNodesBtn');
+  // Interactive 3D Cursor Tracking for Zoah Character
+  const zoahCard = document.getElementById('zoahCard');
+  const zoahEyesGroup = document.getElementById('zoahEyesGroup');
+  const zoahSvg = document.getElementById('zoahSvg');
 
-    let showNodes = true;
-    let width = 0, height = 0;
-    let dpr = window.devicePixelRatio || 1;
+  if (zoahCard && zoahEyesGroup) {
+    document.addEventListener('mousemove', (e) => {
+      const rect = zoahCard.getBoundingClientRect();
+      const cardCenterX = rect.left + rect.width / 2;
+      const cardCenterY = rect.top + rect.height / 2;
 
-    // Interaction & Animation State
-    let mouse = { x: 0, y: 0, targetX: 0, targetY: 0, isHover: false };
-    let rotX = 0, rotY = 0.25; // default 3/4 perspective
-    let targetRotX = 0, targetRotY = 0.25;
-    let blinkProgress = 0; // 0 = open, 1 = closed
-    let isBlinking = false;
-    let squishScaleX = 1, squishScaleY = 1;
-    let squishVelX = 0, squishVelY = 0;
-    let shockwaveRadius = 0;
-    let shockwaveAlpha = 0;
+      const deltaX = (e.clientX - cardCenterX) / (window.innerWidth / 2);
+      const deltaY = (e.clientY - cardCenterY) / (window.innerHeight / 2);
 
-    toggleNodesBtn?.addEventListener('click', () => {
-      showNodes = !showNodes;
-      toggleNodesBtn.textContent = showNodes ? 'Hide Nodes' : 'Show Nodes';
-      toggleNodesBtn.classList.toggle('text-primary', showNodes);
+      // Clamp values
+      const clampX = Math.max(-1, Math.min(1, deltaX));
+      const clampY = Math.max(-1, Math.min(1, deltaY));
+
+      // 3D Card tilt
+      zoahCard.style.transform = `perspective(800px) rotateY(${clampX * 16}deg) rotateX(${-clampY * 16}deg)`;
+
+      // Eyes pupil parallax
+      zoahEyesGroup.style.transform = `translate(${clampX * 8}px, ${clampY * 6}px)`;
     });
 
-    function resize() {
-      const rect = canvas.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-      ctx.scale(dpr, dpr);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    // Mouse / Touch tracking relative to canvas center
-    function handlePointer(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      const nx = ((clientX - rect.left) / width - 0.5) * 2;
-      const ny = ((clientY - rect.top) / height - 0.5) * 2;
-      mouse.targetX = Math.max(-1.5, Math.min(1.5, nx));
-      mouse.targetY = Math.max(-1.5, Math.min(1.5, ny));
-    }
-
-    window.addEventListener('mousemove', (e) => handlePointer(e.clientX, e.clientY));
-    canvas.addEventListener('touchmove', (e) => {
-      if (e.touches[0]) handlePointer(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    // Click to trigger bouncy squish jump
-    canvas.addEventListener('click', () => {
-      squishScaleX = 1.35;
-      squishScaleY = 0.65;
-      isBlinking = true;
-      blinkProgress = 1;
-      shockwaveRadius = 20;
-      shockwaveAlpha = 0.8;
+    zoahCard.addEventListener('mouseleave', () => {
+      zoahCard.style.transform = `perspective(800px) rotateY(0deg) rotateX(0deg)`;
+      zoahEyesGroup.style.transform = `translate(0px, 0px)`;
     });
 
-    // Random blinking schedule
-    function scheduleBlink() {
-      setTimeout(() => {
-        isBlinking = true;
+    // Fun click wink / pulse
+    zoahCard.addEventListener('click', () => {
+      zoahCard.style.transform = 'perspective(800px) scale(0.94)';
+      const leftCapsule = document.getElementById('leftCapsule');
+      if (leftCapsule) {
+        leftCapsule.style.transform = 'scaleY(0.15)';
         setTimeout(() => {
-          isBlinking = false;
-          scheduleBlink();
-        }, 160);
-      }, 2500 + Math.random() * 3500);
-    }
-    scheduleBlink();
-
-    // 3D Projection Helper (Spherical map)
-    function project3D(x, y, z, radius, cx, cy) {
-      // Rotate around Y (yaw)
-      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-      const x1 = x * cosY + z * sinY;
-      const z1 = -x * sinY + z * cosY;
-
-      // Rotate around X (pitch)
-      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-      const y2 = y * cosX - z1 * sinX;
-      const z2 = y * sinX + z1 * cosX;
-
-      const scale = 380 / (380 + z2);
-      return {
-        x: cx + x1 * scale,
-        y: cy + y2 * scale,
-        scale,
-        visible: z2 > -radius * 0.95
-      };
-    }
-
-    // Draw chunky rounded blob character eye/letterform
-    function drawPillEye(cx, cy, baseWidth, baseHeight, angle, blinkFactor, isRight) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-      
-      const w = baseWidth * squishScaleX;
-      const h = baseHeight * Math.max(0.08, 1 - blinkFactor * 0.92) * squishScaleY;
-      const r = Math.min(w, h) / 2;
-
-      // Build organic rounded rectangle path using Bezier curves
-      ctx.beginPath();
-      ctx.moveTo(-w/2 + r, -h/2);
-      ctx.lineTo(w/2 - r, -h/2);
-      ctx.bezierCurveTo(w/2, -h/2, w/2, -h/2 + r, w/2, -h/2 + r);
-      ctx.lineTo(w/2, h/2 - r);
-      ctx.bezierCurveTo(w/2, h/2, w/2 - r, h/2, w/2 - r, h/2);
-      ctx.lineTo(-w/2 + r, h/2);
-      ctx.bezierCurveTo(-w/2, h/2, -w/2, h/2 - r, -w/2, h/2 - r);
-      ctx.lineTo(-w/2, -h/2 + r);
-      ctx.bezierCurveTo(-w/2, -h/2, -w/2 + r, -h/2, -w/2 + r, -h/2);
-      ctx.closePath();
-
-      // Clip and draw Hatching pattern (Zoah aesthetic)
-      ctx.save();
-      ctx.clip();
-      
-      // Soft ambient base fill
-      const grad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
-      grad.addColorStop(0, 'rgba(192, 193, 255, 0.25)');
-      grad.addColorStop(1, 'rgba(128, 131, 255, 0.15)');
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Diagonal Hatch Lines
-      ctx.strokeStyle = 'rgba(192, 193, 255, 0.45)';
-      ctx.lineWidth = 1.2;
-      const step = 6;
-      for (let x = -w - h; x < w + h; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, -h);
-        ctx.lineTo(x + h * 2, h);
-        ctx.stroke();
+          leftCapsule.style.transform = 'scaleY(1)';
+        }, 180);
       }
-      ctx.restore();
-
-      // Outer Bezier stroke
-      ctx.strokeStyle = '#c0c1ff';
-      ctx.lineWidth = 2.2;
-      ctx.stroke();
-
-      // Draw Vector Construction Nodes & Handles (if enabled)
-      if (showNodes) {
-        const nodes = [
-          { x: -w/2 + r, y: -h/2 },
-          { x: 0, y: -h/2 },
-          { x: w/2 - r, y: -h/2 },
-          { x: w/2, y: -h/2 + r },
-          { x: w/2, y: 0 },
-          { x: w/2, y: h/2 - r },
-          { x: w/2 - r, y: h/2 },
-          { x: 0, y: h/2 },
-          { x: -w/2 + r, y: h/2 },
-          { x: -w/2, y: h/2 - r },
-          { x: -w/2, y: 0 },
-          { x: -w/2, y: -h/2 + r }
-        ];
-
-        nodes.forEach((pt, i) => {
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle = (i % 3 === 0) ? '#4edea3' : '#c0c1ff';
-          ctx.fill();
-          ctx.strokeStyle = '#131319';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        });
-      }
-
-      ctx.restore();
-    }
-
-    // Main animation loop
-    let time = 0;
-    function render() {
-      time += 0.02;
-
-      // Smooth camera orbit spring
-      targetRotY = mouse.targetX * 0.65;
-      targetRotX = -mouse.targetY * 0.45;
-      rotY += (targetRotY - rotY) * 0.08;
-      rotX += (targetRotX - rotX) * 0.08;
-
-      // Squish spring physics
-      const k = 0.15; // spring constant
-      const d = 0.78; // damping
-      squishVelX += (1 - squishScaleX) * k;
-      squishVelY += (1 - squishScaleY) * k;
-      squishVelX *= d;
-      squishVelY *= d;
-      squishScaleX += squishVelX;
-      squishScaleY += squishVelY;
-
-      // Blink animation interpolation
-      if (isBlinking) {
-        blinkProgress = Math.min(1, blinkProgress + 0.25);
-      } else {
-        blinkProgress = Math.max(0, blinkProgress - 0.2);
-      }
-
-      // Update HUD
-      if (hudCoords) hudCoords.textContent = `X: ${mouse.targetX.toFixed(2)} | Y: ${(-mouse.targetY).toFixed(2)}`;
-      if (hudAngle) hudAngle.textContent = `ROT Y: ${(rotY * 57.3).toFixed(1)}° | ROT X: ${(rotX * 57.3).toFixed(1)}°`;
-
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height);
-
-      const cx = width / 2;
-      const cy = height / 2;
-      const sphereRadius = Math.min(width, height) * 0.36;
-
-      // Draw Click Shockwave Ring
-      if (shockwaveAlpha > 0.01) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, shockwaveRadius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(192, 193, 255, ${shockwaveAlpha})`;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        shockwaveRadius += 3.5;
-        shockwaveAlpha *= 0.92;
-      }
-
-      // 1. Draw Outer 3D Wireframe Sphere (Dashed lines, Zoah blueprint)
-      ctx.save();
-      
-      // Outer sphere boundary
-      ctx.beginPath();
-      ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(128, 131, 255, 0.4)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Latitude wireframe (Equator ellipse)
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, sphereRadius, Math.abs(Math.sin(rotX) * sphereRadius), rotY * 0.1, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(192, 193, 255, 0.25)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      ctx.stroke();
-
-      // Longitude wireframe (Meridian ellipse)
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, Math.abs(Math.cos(rotY) * sphereRadius), sphereRadius, rotX * 0.1, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(192, 193, 255, 0.25)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.restore();
-
-      // 2. Position and Project the Two Chunky Eyes on the Sphere Surface
-      const eyeOffset = 38;
-      const eyeZ = Math.cos(rotY) * 60;
-      const eyeTilt = rotY * 0.3;
-
-      // Left Eye
-      const pLeft = project3D(-eyeOffset, Math.sin(time * 1.5) * 4, sphereRadius * 0.75, sphereRadius, cx, cy);
-      // Right Eye
-      const pRight = project3D(eyeOffset, Math.sin(time * 1.5 + 0.3) * 4, sphereRadius * 0.75, sphereRadius, cx, cy);
-
-      const eyeWidth = 32;
-      const eyeHeight = 72;
-
-      if (pLeft.visible) {
-        drawPillEye(pLeft.x, pLeft.y, eyeWidth * pLeft.scale, eyeHeight * pLeft.scale, eyeTilt, blinkProgress, false);
-      }
-      if (pRight.visible) {
-        drawPillEye(pRight.x, pRight.y, eyeWidth * pRight.scale, eyeHeight * pRight.scale, eyeTilt, blinkProgress, true);
-      }
-
-      // 3. Draw Center Vector Construction Axis Line
-      if (showNodes) {
-        ctx.beginPath();
-        ctx.moveTo(pLeft.x, pLeft.y);
-        ctx.lineTo(pRight.x, pRight.y);
-        ctx.strokeStyle = 'rgba(78, 222, 163, 0.4)';
-        ctx.setLineDash([3, 3]);
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Center mid-point node
-        const midX = (pLeft.x + pRight.x) / 2;
-        const midY = (pLeft.y + pRight.y) / 2;
-        ctx.beginPath();
-        ctx.arc(midX, midY, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#4edea3';
-        ctx.fill();
-      }
-
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-  })();
+      setTimeout(() => {
+        zoahCard.style.transform = 'perspective(800px) scale(1)';
+      }, 150);
+    });
+  }
 </script>
 
 </body>
