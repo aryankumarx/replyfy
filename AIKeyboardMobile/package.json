@@ -1,6 +1,6 @@
 {
   "name": "replyfy",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -40,7 +40,7 @@
     "node": ">= 22.11.0"
   },
   "android": {
-    "versionCode": 4,
-    "versionName": "1.4.0"
+    "versionCode": 5,
+    "versionName": "1.4.1"
   }
 }

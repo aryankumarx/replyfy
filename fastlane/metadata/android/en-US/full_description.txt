@@ -1,1 +1,16 @@
-Replyfy is a native Android floating overlay that generates contextual AI responses directly over WhatsApp, Telegram, and SMS without app switching.
+Replyfy is an open-source Android assistant that provides a lightweight floating overlay to generate intelligent, context-aware reply suggestions directly over your favorite messaging apps.
+
+Key Features:
+• Instant AI smart replies in multiple tones (Casual, Professional, Witty, Sweet, and more).
+• Multi-language and Hinglish support with natural conversational phrasing.
+• Floating bubble overlay for quick access without switching apps.
+• Zero telemetry and no ads.
+
+Privacy & Network Notice (NonFreeNet):
+• Replyfy requires an active internet connection to generate smart replies.
+• When you tap the bubble to request replies, the copied message text is sent securely over HTTPS to the Replyfy backend server (https://www.replyfy.me), which processes the request using the Google Gemini API.
+• No chat messages or personal data are stored or logged on the server.
+
+Accessibility Service Disclosure:
+• Replyfy utilizes the Android Accessibility Service strictly to detect when a supported chat application (such as WhatsApp, Telegram, or SMS) is opened in the foreground, allowing the floating bubble to appear conveniently.
+• The Accessibility Service does NOT read, inspect, store, or transmit your on-screen chat content or keystrokes (canRetrieveWindowContent is disabled).
