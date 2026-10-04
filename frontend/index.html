@@ -225,61 +225,6 @@
       transform: translateX(-50%) translateY(0);
     }
 
-    /* Interactive Live Demo Floating Card & Animated Prompt Glow */
-    .demo-floating-wrapper {
-      perspective: 1000px;
-    }
-    .demo-card-3d {
-      transform-style: preserve-3d;
-      animation: demoFloat 6.5s ease-in-out infinite;
-      transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-    }
-    @keyframes demoFloat {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-7px) rotate(0.2deg); }
-    }
-    .demo-radial-glow {
-      position: absolute;
-      width: 650px;
-      height: 650px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.16) 0%, rgba(16, 185, 129, 0.1) 45%, transparent 70%);
-      pointer-events: none;
-      filter: blur(70px);
-      z-index: 0;
-    }
-    
-    /* Animated Gradient Aura for Prompt Box */
-    .prompt-glow-container {
-      background: linear-gradient(135deg, rgba(192, 193, 255, 0.3), rgba(99, 102, 241, 0.18), rgba(16, 185, 129, 0.35), rgba(192, 193, 255, 0.2));
-      background-size: 300% 300%;
-      animation: promptAuraGlow 7s ease-in-out infinite;
-      box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.4);
-    }
-    @keyframes promptAuraGlow {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .prompt-glow-container:focus-within {
-      background: linear-gradient(135deg, rgba(192, 193, 255, 0.8), rgba(99, 102, 241, 0.6), rgba(16, 185, 129, 0.7), rgba(192, 193, 255, 0.8));
-      background-size: 300% 300%;
-      box-shadow: 0 0 30px rgba(192, 193, 255, 0.25), 0 0 60px rgba(99, 102, 241, 0.15), inset 0 0 15px rgba(192, 193, 255, 0.05);
-    }
-    .prompt-textarea {
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .prompt-textarea:focus {
-      background-color: rgba(14, 14, 20, 0.95);
-    }
-    .ai-card-item {
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .ai-card-item:hover {
-      transform: translateY(-2px);
-      border-color: rgba(192, 193, 255, 0.35);
-      box-shadow: 0 8px 20px -5px rgba(99, 102, 241, 0.15);
-    }
     .spinner {
       display: inline-block;
       width: 14px;
@@ -354,16 +299,12 @@
     </div>
   </div>
 
-  <!-- INTERACTIVE LIVE DEMO SECTION -->
-  <section class="w-full max-w-3xl mx-auto mb-28 relative scroll-reveal demo-floating-wrapper" id="demo">
-    <!-- Subtle Emerald & Neon Lavender Radial Glow Backdrop -->
-    <div class="demo-radial-glow top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
-
-    <!-- 3D Floating Interactive Live Demo Card -->
-    <div class="demo-card-3d glass-minimal rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-2xl border border-primary/20 backdrop-blur-2xl z-10" id="liveDemoCard" data-tilt-card>
+  <!-- LIVE DEMO INTERACTIVE SECTION -->
+  <section class="w-full max-w-3xl mx-auto mb-24 scroll-reveal" id="demo">
+    <div class="glass-minimal rounded-3xl p-8 sm:p-10 relative overflow-hidden shadow-2xl border border-white/5 floating">
       <div class="flex items-center justify-between mb-8">
         <h2 class="font-headline-md text-headline-md font-medium text-on-surface flex items-center gap-3">
-          <div class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(192,193,255,0.9)] animate-pulse"></div>
+          <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(192,193,255,0.8)]"></div>
           Interactive Live Demo
         </h2>
         <div class="flex items-center gap-2 text-xs font-label-caps tracking-wider text-on-surface-variant">
@@ -372,21 +313,11 @@
         </div>
       </div>
 
-      <!-- Incoming Message Prompt Box with Animated Flowing Glow Border -->
       <div class="mb-6">
-        <div class="flex items-center justify-between mb-2">
-          <label class="font-label-caps text-label-caps text-on-surface-variant/70 block uppercase tracking-[0.2em]">Incoming Message</label>
-          <span class="text-[11px] font-mono text-primary/70 flex items-center gap-1">
-            <span class="material-symbols-outlined text-[13px] animate-spin">sync</span>
-            <span>AI READY</span>
-          </span>
-        </div>
-        <div class="prompt-glow-container group relative rounded-2xl p-[1.5px] overflow-hidden transition-all duration-300">
-          <textarea id="incomingInput" class="prompt-textarea w-full bg-[#111116]/90 border border-white/5 rounded-2xl p-4 text-on-surface focus:outline-none font-body-md resize-none placeholder-on-surface-variant/40 text-sm leading-relaxed block backdrop-blur-xl transition-all duration-300" rows="2" placeholder="e.g. Hey! Are we still on for the meeting tomorrow at 10 AM?"></textarea>
-        </div>
+        <label class="font-label-caps text-label-caps text-on-surface-variant/70 block mb-2 uppercase tracking-[0.2em]">Incoming Message</label>
+        <textarea id="incomingInput" class="w-full bg-surface-container/50 border border-white/10 rounded-xl p-4 text-on-surface focus:outline-none focus:border-primary/50 transition-colors duration-300 font-body-md resize-none placeholder-on-surface-variant/40" rows="2" placeholder="e.g. Hey! Are we still on for the meeting tomorrow at 10 AM?"></textarea>
       </div>
 
-      <!-- Generate Smart Replies Button -->
       <div class="mb-8 relative">
         <button class="w-full bg-primary text-on-primary py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 glow-button transition-all duration-300 hover:pulse-animate uppercase tracking-wider text-sm" id="generate-btn">
           <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
@@ -395,7 +326,6 @@
         <div id="errorBox" class="mt-3 text-xs text-error font-medium text-center"></div>
       </div>
 
-      <!-- AI Suggestions List with Staggered Interactive Cards -->
       <div class="space-y-3" id="ai-responses-container">
         <label class="font-label-caps text-label-caps text-on-surface-variant/70 block mb-2 uppercase tracking-[0.2em]">AI Suggestions (Click to Copy)</label>
         <div id="suggestionsList" class="space-y-3">
@@ -657,94 +587,6 @@
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
   }
-
-  // Dynamic Animated Typewriter in Prompt Input
-  const promptInput = document.getElementById('incomingInput');
-  const samplePrompts = [
-    "e.g. Hey! Are we still on for the meeting tomorrow at 10 AM?",
-    "Can you review my pull request before the team standup?",
-    "Thanks for the intro! Would love to connect for a quick sync.",
-    "Hey bro, running 5 mins late, save me a seat!",
-    "Appreciate the update! Let's follow up on Monday morning."
-  ];
-
-  let promptIdx = 0;
-  let charIdx = 0;
-  let isDeleting = false;
-  let isInteracting = false;
-  let typewriterTimer = null;
-
-  function runPromptTypewriter() {
-    if (isInteracting) return;
-
-    const targetText = samplePrompts[promptIdx];
-
-    if (isDeleting) {
-      promptInput.setAttribute('placeholder', targetText.substring(0, charIdx));
-      charIdx--;
-
-      if (charIdx < 0) {
-        isDeleting = false;
-        promptIdx = (promptIdx + 1) % samplePrompts.length;
-        typewriterTimer = setTimeout(runPromptTypewriter, 350);
-        return;
-      }
-      typewriterTimer = setTimeout(runPromptTypewriter, 22);
-    } else {
-      promptInput.setAttribute('placeholder', targetText.substring(0, charIdx + 1));
-      charIdx++;
-
-      if (charIdx === targetText.length) {
-        isDeleting = true;
-        typewriterTimer = setTimeout(runPromptTypewriter, 2600); // Pause on complete prompt
-        return;
-      }
-      typewriterTimer = setTimeout(runPromptTypewriter, 45);
-    }
-  }
-
-  // Pause typing animation when user focuses or types
-  promptInput.addEventListener('focus', () => {
-    isInteracting = true;
-    clearTimeout(typewriterTimer);
-    if (!promptInput.value.trim()) {
-      promptInput.setAttribute('placeholder', 'Type incoming message or prompt...');
-    }
-  });
-
-  promptInput.addEventListener('input', () => {
-    isInteracting = true;
-    clearTimeout(typewriterTimer);
-  });
-
-  promptInput.addEventListener('blur', () => {
-    if (!promptInput.value.trim()) {
-      isInteracting = false;
-      isDeleting = false;
-      charIdx = 0;
-      typewriterTimer = setTimeout(runPromptTypewriter, 1000);
-    }
-  });
-
-  // Start typewriter loop
-  typewriterTimer = setTimeout(runPromptTypewriter, 700);
-
-  // 3D Interactive Mouse Tilt on Live Demo Card
-  const tiltCards = document.querySelectorAll('[data-tilt-card]');
-  tiltCards.forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-      // Subtle, elegant 3D tilt
-      card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateZ(4px)`;
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) translateZ(0px)';
-    });
-  });
 </script>
 
 </body>
