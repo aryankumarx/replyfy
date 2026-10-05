@@ -157,6 +157,56 @@
         transform: scale(1);
       }
 
+      /* InternDock-style 3D Scroll Perspective */
+      .demo-perspective-wrapper {
+        perspective: 1200px;
+        perspective-origin: center 20%;
+      }
+
+      .demo-card-3d {
+        transform-style: preserve-3d;
+        will-change: transform, box-shadow, border-color;
+        transform: rotateX(25deg) scale(0.88) translateY(50px);
+        transition: box-shadow 0.4s ease, border-color 0.4s ease;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px -10px rgba(192, 193, 255, 0.15);
+        animation: cardBreathe 3s ease-in-out infinite alternate;
+      }
+
+      @keyframes cardBreathe {
+        0% {
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px -10px rgba(192, 193, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+        100% {
+          box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.85), 0 0 60px 2px rgba(192, 193, 255, 0.25);
+          border-color: rgba(192, 193, 255, 0.3);
+        }
+      }
+
+      .demo-glow-aura {
+        position: absolute;
+        top: -15%;
+        left: 5%;
+        right: 5%;
+        height: 130%;
+        background: radial-gradient(ellipse at center, rgba(192, 193, 255, 0.2) 0%, rgba(16, 0, 169, 0.12) 45%, transparent 70%);
+        filter: blur(55px);
+        pointer-events: none;
+        z-index: 0;
+        animation: glowBreathe 3s ease-in-out infinite alternate;
+      }
+
+      @keyframes glowBreathe {
+        0% {
+          opacity: 0.4;
+          transform: scale(0.96);
+        }
+        100% {
+          opacity: 0.85;
+          transform: scale(1.05);
+        }
+      }
+
       .floating {
         animation: floating 6s ease-in-out infinite;
       }
@@ -300,8 +350,9 @@
   </div>
 
   <!-- LIVE DEMO INTERACTIVE SECTION -->
-  <section class="w-full max-w-3xl mx-auto mb-24 scroll-reveal" id="demo">
-    <div class="glass-minimal rounded-3xl p-8 sm:p-10 relative overflow-hidden shadow-2xl border border-white/5 floating">
+  <section class="w-full max-w-5xl mx-auto mb-24 demo-perspective-wrapper relative" id="demo">
+    <div class="demo-glow-aura"></div>
+    <div class="glass-minimal rounded-3xl p-8 sm:p-12 relative overflow-hidden demo-card-3d border border-white/10" id="demoCard">
       <div class="flex items-center justify-between mb-8">
         <h2 class="font-headline-md text-headline-md font-medium text-on-surface flex items-center gap-3">
           <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(192,193,255,0.8)]"></div>
@@ -461,21 +512,82 @@
       const rect = link.getBoundingClientRect();
       const x = e.clientX - rect.left - rect.width / 2;
       const y = e.clientY - rect.top - rect.height / 2;
-      link.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+      link.style.transform = `translate(${x * 0.08}px, ${y * 0.3}px)`;
     });
     link.addEventListener('mouseleave', () => {
       link.style.transform = 'translate(0px, 0px)';
     });
   });
 
-  // Parallax subtle background movement
+  // Parallax subtle background movement (focused on up/down with subtle horizontal)
   document.addEventListener('mousemove', (e) => {
-    const x = (e.clientX / window.innerWidth - 0.5) * 20;
+    const x = (e.clientX / window.innerWidth - 0.5) * 4;
     const y = (e.clientY / window.innerHeight - 0.5) * 20;
     document.querySelectorAll('.parallax-bg').forEach(el => {
       el.style.transform = `translate(${x}px, ${y}px)`;
     });
   });
+
+  // Scroll-driven 3D Tilt for Live Demo Card (InternDock style)
+  const demoSection = document.getElementById('demo');
+  const demoCard = document.getElementById('demoCard');
+
+  if (demoSection && demoCard) {
+    let isHovered = false;
+
+    function updateCardTransform() {
+      if (isHovered) return;
+
+      const rect = demoSection.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      // Calculate progress: 0 when entering bottom, 1 when nicely centered
+      const enterOffset = windowHeight * 0.95;
+      const centerOffset = windowHeight * 0.35;
+
+      let progress = (enterOffset - rect.top) / (enterOffset - centerOffset);
+      progress = Math.max(0, Math.min(1, progress));
+
+      // Smooth ease-out cubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      const rotateX = (1 - easeProgress) * 25; // 25deg -> 0deg (rich up/down pitch)
+      const scale = 0.88 + easeProgress * 0.12; // 0.88 -> 1.0
+      const translateY = (1 - easeProgress) * 55; // 55px -> 0px (flexible vertical rise)
+
+      demoCard.style.transform = `rotateX(${rotateX}deg) scale(${scale}) translateY(${translateY}px)`;
+    }
+
+    window.addEventListener('scroll', () => {
+      requestAnimationFrame(updateCardTransform);
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      requestAnimationFrame(updateCardTransform);
+    }, { passive: true });
+
+    // Interactive mouse tilt on hover (increased up/down tilt flexibility)
+    demoCard.addEventListener('mouseenter', () => {
+      isHovered = true;
+      demoCard.style.transition = 'transform 0.12s ease-out, box-shadow 0.3s ease';
+    });
+
+    demoCard.addEventListener('mousemove', (e) => {
+      const rect = demoCard.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      demoCard.style.transform = `perspective(1000px) rotateX(${-y * 14}deg) rotateY(${x * 1.5}deg) scale(1.01)`;
+    });
+
+    demoCard.addEventListener('mouseleave', () => {
+      isHovered = false;
+      demoCard.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease';
+      updateCardTransform();
+    });
+
+    // Initial calculation
+    updateCardTransform();
+  }
 
   // Health check
   async function checkHealth() {
